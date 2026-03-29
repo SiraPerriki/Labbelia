@@ -1,6 +1,6 @@
 import { PALETTES, THEMES } from "../data/design";
-import { MOOD_TRACKER_CARD_QUESTION } from "../data/mood";
-import { Question, LabelCard, CategoryId, LabelSizeId, ThemeId } from "../types";
+import { MOOD_TRACKER_CARD_QUESTION, MOOD_TRACKER_TEMPLATES } from "../data/mood";
+import { Question, LabelCard, CategoryId, LabelSizeId, ThemeId, CardContentMode } from "../types";
 
 export const ALL_CATEGORIES = "all";
 
@@ -28,6 +28,84 @@ function randomTheme(sizeId: LabelSizeId): ThemeId {
   return THEMES[Math.floor(Math.random() * THEMES.length)].id;
 }
 
+function buildCardId(questionId: string, seed: number, suffix: string): string {
+  return `${questionId}-${seed}-${suffix}`;
+}
+
+function createDecoratedCard(
+  question: Question,
+  sizeId: LabelSizeId,
+  suffix: string,
+  contentMode: CardContentMode = "prompt",
+): LabelCard {
+  const seed = Math.floor(Math.random() * 100_000_000);
+
+  return {
+    id: buildCardId(question.id, seed, suffix),
+    contentMode,
+    question,
+    themeId: randomTheme(sizeId),
+    paletteIndex: Math.floor(Math.random() * PALETTES.length),
+    serial: 100 + Math.floor(Math.random() * 900),
+    seed,
+  };
+}
+
+export function createPromptCard(options: Omit<BatchOptions, "count">): LabelCard | null {
+  const { questions, categoryId, excludeQuestionIds = [], sizeId } = options;
+
+  const filtered = questions.filter((question) => {
+    if (excludeQuestionIds.includes(question.id)) {
+      return false;
+    }
+
+    return categoryId === ALL_CATEGORIES || question.category === categoryId;
+  });
+
+  const question = shuffle(filtered)[0];
+
+  return question ? createDecoratedCard(question, sizeId, "single", "prompt") : null;
+}
+
+export function createChallengeCard(options: Omit<BatchOptions, "count">): LabelCard | null {
+  const { questions, categoryId, excludeQuestionIds = [], sizeId } = options;
+
+  const filtered = questions.filter((question) => {
+    if (excludeQuestionIds.includes(question.id)) {
+      return false;
+    }
+
+    return categoryId === ALL_CATEGORIES || question.category === categoryId;
+  });
+
+  const question = shuffle(filtered)[0];
+
+  return question ? createDecoratedCard(question, sizeId, "challenge", "challenge") : null;
+}
+
+export function rerollCardLook(card: LabelCard, sizeId: LabelSizeId): LabelCard {
+  let nextThemeId = card.themeId;
+  let nextPaletteIndex = card.paletteIndex;
+  let attempts = 0;
+
+  while (attempts < 8 && nextThemeId === card.themeId && nextPaletteIndex === card.paletteIndex) {
+    nextThemeId = randomTheme(sizeId);
+    nextPaletteIndex = Math.floor(Math.random() * PALETTES.length);
+    attempts += 1;
+  }
+
+  const seed = Math.floor(Math.random() * 100_000_000);
+
+  return {
+    ...card,
+    id: buildCardId(card.question.id, seed, "look"),
+    themeId: nextThemeId,
+    paletteIndex: nextPaletteIndex,
+    serial: 100 + Math.floor(Math.random() * 900),
+    seed,
+  };
+}
+
 export function createBatch(options: BatchOptions): LabelCard[] {
   const { questions, count, categoryId, excludeQuestionIds = [], sizeId } = options;
 
@@ -41,19 +119,7 @@ export function createBatch(options: BatchOptions): LabelCard[] {
 
   return shuffle(filtered)
     .slice(0, count)
-    .map((question, index) => {
-      const seed = Math.floor(Math.random() * 100_000_000);
-
-      return {
-        id: `${question.id}-${seed}-${index}`,
-        contentMode: "prompt",
-        question,
-        themeId: randomTheme(sizeId),
-        paletteIndex: Math.floor(Math.random() * PALETTES.length),
-        serial: 100 + Math.floor(Math.random() * 900),
-        seed,
-      };
-    });
+    .map((question, index) => createDecoratedCard(question, sizeId, String(index), "prompt"));
 }
 
 export function createMoodBatch(options: { count: number; sizeId: LabelSizeId }): LabelCard[] {
@@ -61,11 +127,13 @@ export function createMoodBatch(options: { count: number; sizeId: LabelSizeId })
 
   return Array.from({ length: count }).map((_, index) => {
     const seed = Math.floor(Math.random() * 100_000_000);
+    const moodTemplate = MOOD_TRACKER_TEMPLATES[Math.floor(Math.random() * MOOD_TRACKER_TEMPLATES.length)] ?? MOOD_TRACKER_TEMPLATES[0];
 
     return {
       id: `mood-tracker-${seed}-${index}`,
       contentMode: "mood",
       question: MOOD_TRACKER_CARD_QUESTION,
+      moodTemplateId: moodTemplate?.id,
       themeId: randomTheme(sizeId),
       paletteIndex: Math.floor(Math.random() * PALETTES.length),
       serial: 100 + Math.floor(Math.random() * 900),

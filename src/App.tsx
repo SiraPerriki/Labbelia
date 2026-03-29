@@ -1,18 +1,20 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { CandidateCard } from "./components/CandidateCard";
 import { SheetSvg } from "./components/SheetSvg";
+import { CREATIVE_CHALLENGE_BANK } from "./data/challenges";
 import { UI_COPY } from "./data/content";
 import { LABEL_SIZES } from "./data/design";
-import { MOOD_TRACKER_ROWS, MOOD_TRACKER_TITLE } from "./data/mood";
+import { getMoodTrackerTitle, MOOD_TRACKER_TEMPLATES, MOOD_TRACKER_TITLE } from "./data/mood";
 import { QUESTION_BANK } from "./data/questions";
 import { downloadCardSvg, downloadSheetPng, downloadSheetSvg } from "./lib/export";
-import { ALL_CATEGORIES, createBatch, createMoodBatch } from "./lib/generator";
-import { LabelCard, LabelSizeId, Locale } from "./types";
+import { ALL_CATEGORIES, createChallengeCard, createMoodBatch, createPromptCard, rerollCardLook } from "./lib/generator";
+import { localize } from "./lib/i18n";
+import { CardContentMode, LabelCard, LabelSizeId, Locale } from "./types";
 
 const BATCH_SIZE = 1;
 
 function text(locale: Locale, value: { es: string; en: string }): string {
-  return value[locale];
+  return localize(locale, value);
 }
 
 function App() {
@@ -20,13 +22,34 @@ function App() {
     const stored = window.localStorage.getItem("paper-hearts-locale");
     return stored === "en" ? "en" : "es";
   });
-  const [sizeId, setSizeId] = useState<LabelSizeId>("classic");
-  const [contentMode, setContentMode] = useState<"prompt" | "mood">("prompt");
+  const [contentMode, setContentMode] = useState<CardContentMode>("prompt");
   const [candidates, setCandidates] = useState<LabelCard[]>([]);
-  const [sheetCards, setSheetCards] = useState<LabelCard[]>([]);
+  const [sheetCardsByMode, setSheetCardsByMode] = useState<Record<CardContentMode, LabelCard[]>>({
+    prompt: [],
+    challenge: [],
+    mood: [],
+  });
   const [exportingPng, setExportingPng] = useState(false);
+  const [compactTopbar, setCompactTopbar] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 1120 : false,
+  );
+  const [brandMenuOpen, setBrandMenuOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [undoCardByMode, setUndoCardByMode] = useState<Record<CardContentMode, LabelCard | null>>({
+    prompt: null,
+    challenge: null,
+    mood: null,
+  });
+  const seenQuestionIdsRef = useRef<Record<"prompt" | "challenge", string[]>>({
+    prompt: [],
+    challenge: [],
+  });
 
-  const size = LABEL_SIZES.find((option) => option.id === sizeId) ?? LABEL_SIZES[0];
+  const promptSize = LABEL_SIZES.find((option) => option.id === "mini") ?? LABEL_SIZES[0];
+  const moodSize = LABEL_SIZES.find((option) => option.id === "square") ?? LABEL_SIZES[0];
+  const size = contentMode === "mood" ? moodSize : promptSize;
+  const sizeId: LabelSizeId = size.id;
+  const sheetCards = sheetCardsByMode[contentMode];
   const capacity = size.columns * size.rows;
 
   useEffect(() => {
@@ -34,40 +57,191 @@ function App() {
   }, [locale]);
 
   useEffect(() => {
+    function syncTopbarMode() {
+      const nextCompact = window.innerWidth <= 1120;
+      setCompactTopbar(nextCompact);
+
+      if (!nextCompact) {
+        setBrandMenuOpen(false);
+        setOptionsMenuOpen(false);
+      }
+    }
+
+    syncTopbarMode();
+    window.addEventListener("resize", syncTopbarMode);
+    return () => window.removeEventListener("resize", syncTopbarMode);
+  }, []);
+
+  function idsOnSheet(mode: "prompt" | "challenge"): string[] {
+    return sheetCardsByMode[mode]
+      .filter((card) => card.contentMode === mode)
+      .map((card) => card.question.id);
+  }
+
+  function markQuestionSeen(mode: "prompt" | "challenge", questionId: string): void {
+    if (!seenQuestionIdsRef.current[mode].includes(questionId)) {
+      seenQuestionIdsRef.current = {
+        ...seenQuestionIdsRef.current,
+        [mode]: [...seenQuestionIdsRef.current[mode], questionId],
+      };
+    }
+  }
+
+  function nextTextCard(mode: "prompt" | "challenge", extraExcludedIds: string[] = []): LabelCard | null {
+    const source = mode === "challenge" ? CREATIVE_CHALLENGE_BANK : QUESTION_BANK;
+    const create = mode === "challenge" ? createChallengeCard : createPromptCard;
+    const sheetIds = idsOnSheet(mode);
+    const strictExcluded = [...new Set([...sheetIds, ...seenQuestionIdsRef.current[mode], ...extraExcludedIds])];
+    let next =
+      create({
+        questions: source,
+        categoryId: ALL_CATEGORIES,
+        sizeId,
+        excludeQuestionIds: strictExcluded,
+      }) ??
+      create({
+        questions: source,
+        categoryId: ALL_CATEGORIES,
+        sizeId,
+        excludeQuestionIds: [...new Set([...sheetIds, ...extraExcludedIds])],
+      }) ??
+      create({
+        questions: source,
+        categoryId: ALL_CATEGORIES,
+        sizeId,
+        excludeQuestionIds: sheetIds,
+      });
+
+    if (next) {
+      markQuestionSeen(mode, next.question.id);
+    }
+
+    return next;
+  }
+
+  function refillCandidate(): void {
     startTransition(() => {
-      setCandidates(contentMode === "mood"
-        ? createMoodBatch({
-            count: BATCH_SIZE,
-            sizeId,
-          })
-        : createBatch({
-            questions: QUESTION_BANK,
-            count: BATCH_SIZE,
-            categoryId: ALL_CATEGORIES,
-            sizeId,
-            excludeQuestionIds: sheetCards
-              .filter((card) => card.contentMode === "prompt")
-              .map((card) => card.question.id),
-          }));
+      const next =
+        contentMode === "mood"
+          ? createMoodBatch({
+              count: BATCH_SIZE,
+              sizeId,
+            })
+          : (() => {
+              const card = nextTextCard(contentMode);
+              return card ? [card] : [];
+            })();
+      setCandidates(next);
     });
-  }, [contentMode, sizeId, sheetCards]);
+  }
+
+  useEffect(() => {
+    refillCandidate();
+  }, [contentMode, sizeId]);
 
   function regenerateBatch(): void {
+    const current = candidates[0];
+
     startTransition(() => {
-      setCandidates(contentMode === "mood"
-        ? createMoodBatch({
-            count: BATCH_SIZE,
-            sizeId,
-          })
-        : createBatch({
-            questions: QUESTION_BANK,
-            count: BATCH_SIZE,
-            categoryId: ALL_CATEGORIES,
-            sizeId,
-            excludeQuestionIds: sheetCards
-              .filter((card) => card.contentMode === "prompt")
-              .map((card) => card.question.id),
-          }));
+      const next =
+        contentMode === "mood"
+          ? createMoodBatch({
+              count: BATCH_SIZE,
+              sizeId,
+            })
+          : (() => {
+              const card = nextTextCard(contentMode, current ? [current.question.id] : []);
+              return card ? [card] : [];
+            })();
+
+      if (current && next[0]) {
+        setUndoCardByMode((value) => ({ ...value, [contentMode]: current }));
+      }
+
+      setCandidates(next);
+    });
+  }
+
+  function rerollCurrentLook(): void {
+    const current = candidates[0];
+
+    if (!current) {
+      return;
+    }
+
+    startTransition(() => {
+      setUndoCardByMode((value) => ({ ...value, [contentMode]: current }));
+      setCandidates([rerollCardLook(current, sizeId)]);
+    });
+  }
+
+  function rerollCurrentQuestion(): void {
+    const current = candidates[0];
+
+    if (!current || current.contentMode !== "prompt") {
+      if (!current || current.contentMode !== "challenge") {
+        return;
+      }
+    }
+
+    const next = nextTextCard(current.contentMode, [current.question.id]);
+
+    if (!next) {
+      return;
+    }
+
+    startTransition(() => {
+      setUndoCardByMode((value) => ({ ...value, [contentMode]: current }));
+      setCandidates([
+        {
+          ...current,
+          id: next.id,
+          question: next.question,
+        },
+      ]);
+    });
+  }
+
+  function rerollCurrentMoodTemplate(): void {
+    const current = candidates[0];
+
+    if (!current || current.contentMode !== "mood") {
+      return;
+    }
+
+    const availableTemplates = MOOD_TRACKER_TEMPLATES.filter(
+      (template) => template.id !== current.moodTemplateId,
+    );
+    const nextTemplate =
+      availableTemplates[Math.floor(Math.random() * availableTemplates.length)] ??
+      MOOD_TRACKER_TEMPLATES[0];
+
+    if (!nextTemplate) {
+      return;
+    }
+
+    startTransition(() => {
+      setUndoCardByMode((value) => ({ ...value, [contentMode]: current }));
+      setCandidates([
+        {
+          ...current,
+          id: `mood-template-${nextTemplate.id}-${Math.floor(Math.random() * 100_000_000)}`,
+          moodTemplateId: nextTemplate.id,
+        },
+      ]);
+    });
+  }
+
+  function undoLastChange(): void {
+    const previous = undoCardByMode[contentMode];
+
+    if (!previous || !currentCard) {
+      return;
+    }
+
+    startTransition(() => {
+      setUndoCardByMode((value) => ({ ...value, [contentMode]: currentCard }));
+      setCandidates([previous]);
     });
   }
 
@@ -76,15 +250,46 @@ function App() {
       return;
     }
 
-    if (card.contentMode === "prompt" && sheetCards.some((item) => item.contentMode === "prompt" && item.question.id === card.question.id)) {
+    if (
+      (card.contentMode === "prompt" || card.contentMode === "challenge") &&
+      sheetCards.some(
+        (item) =>
+          item.contentMode === card.contentMode &&
+          item.question.id === card.question.id,
+      )
+    ) {
       return;
     }
 
-    setSheetCards([...sheetCards, card]);
+    setSheetCardsByMode((current) => ({
+      ...current,
+      [contentMode]: [...current[contentMode], card],
+    }));
+
+    if (sheetCards.length + 1 < capacity) {
+      startTransition(() => {
+        const next =
+          contentMode === "mood"
+            ? createMoodBatch({
+                count: BATCH_SIZE,
+                sizeId,
+              })
+            : (() => {
+                const cardMode = contentMode === "challenge" ? "challenge" : "prompt";
+                const nextCard = nextTextCard(cardMode, [card.question.id]);
+                return nextCard ? [nextCard] : [];
+              })();
+
+        setCandidates(next);
+      });
+    }
   }
 
   function removeFromSheet(cardId: string): void {
-    setSheetCards(sheetCards.filter((card) => card.id !== cardId));
+    setSheetCardsByMode((current) => ({
+      ...current,
+      [contentMode]: current[contentMode].filter((card) => card.id !== cardId),
+    }));
   }
 
   async function handleSheetPng(): Promise<void> {
@@ -103,63 +308,107 @@ function App() {
 
   function cardLabel(card: LabelCard): string {
     return card.contentMode === "mood"
-      ? MOOD_TRACKER_TITLE[locale]
-      : card.question.text[locale];
+      ? localize(locale, getMoodTrackerTitle(card.moodTemplateId))
+      : localize(locale, card.question.text);
   }
 
   const currentCard = candidates[0];
+  const brandBlock = (
+    <div className="topbar-copy">
+      <div className="brand-mark" aria-hidden="true">L</div>
+      <div className="brand-lockup">
+        <div className="brand-title-row">
+          <p className="eyebrow">{text(locale, UI_COPY.appTitle)}</p>
+        </div>
+        <p className="brand-tagline">{text(locale, UI_COPY.appSubtitle)}</p>
+      </div>
+    </div>
+  );
+  const controlsBlock = (
+    <div className="topbar-actions">
+      <div className="mode-toggle" role="tablist" aria-label={locale === "en" ? "Label mode" : "Modo de etiqueta"}>
+        <button
+          className={contentMode === "prompt" ? "active" : ""}
+          onClick={() => setContentMode("prompt")}
+          type="button"
+        >
+          {locale === "en" ? "♡ Strips" : "♡ Tiritas"}
+        </button>
+        <button
+          className={contentMode === "challenge" ? "active" : ""}
+          onClick={() => setContentMode("challenge")}
+          type="button"
+        >
+          {locale === "en" ? "✦ Creative challenges" : "✦ Retos creativos"}
+        </button>
+        <button
+          className={contentMode === "mood" ? "active" : ""}
+          onClick={() => setContentMode("mood")}
+          type="button"
+        >
+          {`☆ ${localize(locale, MOOD_TRACKER_TITLE)}`}
+        </button>
+      </div>
+      <span className="topbar-separator" aria-hidden="true" />
+      <div className="language-toggle language-toggle-compact" role="tablist" aria-label={locale === "en" ? "Language switcher" : "Selector de idioma"}>
+        <button
+          className={locale === "es" ? "active" : ""}
+          onClick={() => setLocale("es")}
+          type="button"
+        >
+          ES
+        </button>
+        <button
+          className={locale === "en" ? "active" : ""}
+          onClick={() => setLocale("en")}
+          type="button"
+        >
+          EN
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="app-shell">
       <div className="ambient ambient-left" />
       <div className="ambient ambient-right" />
-      <header className="topbar card-surface">
-        <div className="topbar-copy">
-          <div className="brand-mark" aria-hidden="true">L</div>
-          <div className="brand-lockup">
-            <p className="eyebrow">{text(locale, UI_COPY.appTitle)}</p>
-            <p className="brand-tagline">{text(locale, UI_COPY.appSubtitle)}</p>
-          </div>
-        </div>
-        <div className="topbar-actions">
-          <span className="mini-stat">
-            {contentMode === "mood"
-              ? `${MOOD_TRACKER_ROWS.length} ${locale === "es" ? "pistas" : "tracks"}`
-              : QUESTION_BANK.length}
-          </span>
-          <div className="mode-toggle" role="tablist" aria-label={locale === "es" ? "Modo de etiqueta" : "Label mode"}>
-            <button
-              className={contentMode === "prompt" ? "active" : ""}
-              onClick={() => setContentMode("prompt")}
-              type="button"
-            >
-              {locale === "es" ? "Preguntas" : "Prompts"}
-            </button>
-            <button
-              className={contentMode === "mood" ? "active" : ""}
-              onClick={() => setContentMode("mood")}
-              type="button"
-            >
-              Mood tracker
-            </button>
-          </div>
-          <div className="language-toggle" role="tablist" aria-label="Language switcher">
-            <button
-              className={locale === "es" ? "active" : ""}
-              onClick={() => setLocale("es")}
-              type="button"
-            >
-              ES
-            </button>
-            <button
-              className={locale === "en" ? "active" : ""}
-              onClick={() => setLocale("en")}
-              type="button"
-            >
-              EN
-            </button>
-          </div>
-        </div>
+      <header className={`topbar card-surface ${compactTopbar ? "topbar-compact" : ""}`}>
+        {compactTopbar ? (
+          <>
+            <div className="topbar-compact-row">
+              <button
+                className={`topbar-compact-trigger ${brandMenuOpen ? "active" : ""}`}
+                onClick={() => setBrandMenuOpen((open) => !open)}
+                type="button"
+              >
+                Labbelia
+              </button>
+              <button
+                className={`topbar-compact-trigger ${optionsMenuOpen ? "active" : ""}`}
+                onClick={() => setOptionsMenuOpen((open) => !open)}
+                type="button"
+              >
+                {locale === "en" ? "Options" : "Opciones"}
+              </button>
+            </div>
+            {brandMenuOpen ? (
+              <div className="topbar-compact-panel">
+                {brandBlock}
+              </div>
+            ) : null}
+            {optionsMenuOpen ? (
+              <div className="topbar-compact-panel">
+                {controlsBlock}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {brandBlock}
+            {controlsBlock}
+          </>
+        )}
       </header>
 
       <main className="main-grid">
@@ -169,43 +418,73 @@ function App() {
               {currentCard ? (
                 <div className="focus-stage">
                   <div className="focus-caption">
-                    <span className="focus-kicker">
-                      {contentMode === "mood"
-                        ? "Mood tracker"
-                        : locale === "es"
-                          ? "Etiqueta del momento"
-                          : "Current label"}
-                    </span>
-                    <span className="mini-stat">
-                      {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
-                    </span>
+                    <div className="focus-heading">
+                      <span className="focus-kicker">
+                        {contentMode === "mood"
+                          ? localize(locale, getMoodTrackerTitle(currentCard.moodTemplateId))
+                          : contentMode === "challenge"
+                            ? locale === "en"
+                              ? "Creative challenge"
+                              : "Reto creativo"
+                          : locale === "en"
+                            ? "Prompt"
+                            : "Pregunta"}
+                      </span>
+                    </div>
+                    <div className="focus-status-strip">
+                      <span className="mini-stat mini-stat-soft">
+                        {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
+                      </span>
+                    </div>
                   </div>
                   <div className="focus-actions">
+                    <button
+                      className="button button-ghost"
+                      disabled={!undoCardByMode[contentMode]}
+                      onClick={undoLastChange}
+                      type="button"
+                    >
+                      {locale === "en" ? "↶ Undo" : "↶ Deshacer"}
+                    </button>
                     <button
                       className="button button-secondary"
                       onClick={regenerateBatch}
                       type="button"
                     >
-                      {locale === "es" ? "Siguiente" : "Next"}
+                      {contentMode === "mood"
+                        ? locale === "en"
+                          ? "↻ Another tracker"
+                          : "↻ Otro tracker"
+                        : contentMode === "challenge"
+                          ? locale === "en"
+                            ? "↻ Another challenge"
+                            : "↻ Otro reto"
+                          : locale === "en"
+                            ? "↻ Next"
+                            : "↻ Siguiente"}
                     </button>
                     <button
                       className="button button-primary"
                       disabled={
                         sheetCards.length >= capacity ||
-                        (currentCard.contentMode === "prompt" &&
-                          sheetCards.some((selected) => selected.contentMode === "prompt" && selected.question.id === currentCard.question.id))
+                        ((currentCard.contentMode === "prompt" || currentCard.contentMode === "challenge") &&
+                          sheetCards.some((selected) => selected.contentMode === currentCard.contentMode && selected.question.id === currentCard.question.id))
                       }
                       onClick={() => addToSheet(currentCard)}
                       type="button"
                     >
-                      {currentCard.contentMode === "prompt" &&
-                      sheetCards.some((selected) => selected.contentMode === "prompt" && selected.question.id === currentCard.question.id)
-                        ? locale === "es"
-                          ? "En hoja"
-                          : "On sheet"
-                        : locale === "es"
-                          ? "Guardar en hoja"
-                          : "Keep on sheet"}
+                      {(currentCard.contentMode === "prompt" || currentCard.contentMode === "challenge") &&
+                      sheetCards.some((selected) => selected.contentMode === currentCard.contentMode && selected.question.id === currentCard.question.id)
+                        ? locale === "en"
+                          ? "On sheet"
+                          : "En hoja"
+                        : locale === "en"
+                          ? contentMode === "challenge"
+                            ? "＋ Keep challenge"
+                            : "＋ Keep on sheet"
+                          : contentMode === "challenge"
+                            ? "＋ Guardar reto"
+                            : "＋ Guardar en hoja"}
                     </button>
                   </div>
                   <CandidateCard
@@ -214,24 +493,39 @@ function App() {
                     size={size}
                     locale={locale}
                     onDownload={(item) => downloadCardSvg(item, size, locale)}
-                    downloadLabel={text(locale, UI_COPY.downloadSvg)}
+                    onRefreshLook={rerollCurrentLook}
+                    onRefreshQuestion={currentCard.contentMode === "mood" ? rerollCurrentMoodTemplate : rerollCurrentQuestion}
+                    downloadLabel={locale === "en" ? "↓ Single SVG" : "↓ SVG individual"}
+                    refreshLookLabel={locale === "en" ? "◌ Background" : "◌ Fondo"}
+                    refreshQuestionLabel={
+                      currentCard.contentMode === "mood"
+                        ? locale === "en"
+                          ? "☆ Tracker"
+                          : "☆ Tracker"
+                        : currentCard.contentMode === "prompt"
+                        ? locale === "en"
+                          ? "✎ Phrase"
+                          : "✎ Frase"
+                        : currentCard.contentMode === "challenge"
+                          ? locale === "en"
+                            ? "✎ Challenge"
+                            : "✎ Reto"
+                          : undefined
+                    }
                   />
                 </div>
               ) : (
-                <p className="empty-sheet">{locale === "es" ? "No quedan mas preguntas en este filtro." : "No prompts left in this filter."}</p>
+                <p className="empty-sheet">
+                  {contentMode === "challenge"
+                    ? locale === "en"
+                      ? "No creative challenges left right now."
+                      : "No quedan retos creativos ahora mismo."
+                    : locale === "en"
+                      ? "No prompts left in this filter."
+                      : "No quedan más preguntas en este filtro."}
+                </p>
               )}
             </div>
-
-            <aside className="orbit-panel orbit-panel-right">
-              <div className="orbit-card orbit-card-soft">
-                <span className="control-label">
-                  {locale === "es" ? "Hoja actual" : "Current sheet"}
-                </span>
-                <span className="mini-stat">
-                  {sheetCards.length}/{capacity}
-                </span>
-              </div>
-            </aside>
           </div>
         </section>
 
@@ -239,35 +533,59 @@ function App() {
           <div className="section-header section-header-inline">
             <div>
               <h2>{text(locale, UI_COPY.sheetTitle)}</h2>
-              <p>{text(locale, UI_COPY.sheetSubtitle)}</p>
+              <p>
+                {contentMode === "mood"
+                  ? locale === "en"
+                    ? "Build a compact mood sheet ready to print."
+                    : "Compón una hoja compacta de seguimiento lista para imprimir."
+                  : contentMode === "challenge"
+                    ? locale === "en"
+                      ? "Fill the page with creative nudges worth keeping."
+                      : "Llena la página con retos creativos que merezca la pena guardar."
+                    : text(locale, UI_COPY.sheetSubtitle)}
+              </p>
             </div>
             <div className="toolbar">
               <button
                 className="button button-secondary"
-                onClick={() => setSheetCards([])}
+                onClick={() =>
+                  setSheetCardsByMode((current) => ({
+                    ...current,
+                    [contentMode]: [],
+                  }))
+                }
                 type="button"
               >
-                {text(locale, UI_COPY.clear)}
+                {locale === "en" ? "⌫ Clear sheet" : "⌫ Vaciar hoja"}
               </button>
             </div>
           </div>
 
           <div className="sheet-settings orbit-card">
             <span className="control-label">
-              {locale === "es" ? "Formato de la hoja" : "Sheet format"}
+              {contentMode === "mood"
+                ? locale === "en"
+                  ? "Square format"
+                  : "Formato cuadrado"
+                : locale === "en"
+                  ? "Strip format"
+                  : "Formato tirita"}
             </span>
-            <div className="size-grid size-grid-compact">
-              {LABEL_SIZES.map((option) => (
-                <button
-                  key={option.id}
-                  className={`size-card size-card-compact ${sizeId === option.id ? "size-card-active" : ""}`}
-                  onClick={() => setSizeId(option.id)}
-                  type="button"
-                >
-                  <strong>{option.name[locale]}</strong>
-                  <span>{option.description[locale]}</span>
-                </button>
-              ))}
+            <div className="sheet-format-summary">
+              <strong>
+                {contentMode === "mood"
+                  ? locale === "en"
+                    ? "Compact square mood tracker"
+                    : "Mood tracker cuadrado compacto"
+                  : contentMode === "challenge"
+                    ? locale === "en"
+                      ? "Mini creative challenge strips"
+                      : "Tiritas mini de retos creativos"
+                  : locale === "en"
+                    ? "Mini journaling strips"
+                    : "Tiritas mini para journaling"}
+              </strong>
+              <span>{localize(locale, size.description)}</span>
             </div>
           </div>
 
@@ -275,11 +593,11 @@ function App() {
             <span>
               {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
             </span>
-            <span>{size.description[locale]}</span>
+            <span>{localize(locale, size.description)}</span>
           </div>
 
           <div className="print-area">
-            <div className="sheet-frame">
+            <div className={`sheet-frame sheet-frame-${size.id}`}>
               <SheetSvg
                 cards={sheetCards}
                 locale={locale}
@@ -296,7 +614,7 @@ function App() {
               onClick={() => downloadSheetSvg(sheetCards, size, locale)}
               type="button"
             >
-              {text(locale, UI_COPY.exportSvg)}
+              {locale === "en" ? "↓ Download A4 SVG" : "↓ Descargar A4 SVG"}
             </button>
             <button
               className="button button-primary"
@@ -304,7 +622,13 @@ function App() {
               onClick={handleSheetPng}
               type="button"
             >
-              {exportingPng ? (locale === "es" ? "Renderizando..." : "Rendering...") : text(locale, UI_COPY.exportPng)}
+              {exportingPng
+                ? locale === "en"
+                  ? "… Rendering"
+                  : "… Renderizando"
+                : locale === "en"
+                  ? "↓ Download A4 PNG"
+                  : "↓ Descargar A4 PNG"}
             </button>
             <button
               className="button button-secondary"
@@ -312,7 +636,7 @@ function App() {
               onClick={printSheet}
               type="button"
             >
-              {text(locale, UI_COPY.exportPdf)}
+              {locale === "en" ? "⎙ Print / PDF" : "⎙ Imprimir / PDF"}
             </button>
           </div>
 
@@ -339,6 +663,20 @@ function App() {
           )}
         </section>
       </main>
+
+      <footer className="site-footer card-surface">
+        <div className="site-footer-copy">
+          <p className="site-footer-title">Labbelia</p>
+          <p className="site-footer-note">
+            Pequeñas tiritas desarrolladas con cariño por <strong>Sira Perriki</strong>.
+          </p>
+        </div>
+        <nav className="site-footer-links" aria-label="Enlaces de Labbelia">
+          <a href="https://x.com/SiraPerriki" target="_blank" rel="noreferrer">X · @SiraPerriki</a>
+          <a href="https://github.com/SiraPerriki" target="_blank" rel="noreferrer">GitHub · @SiraPerriki</a>
+          <a href="mailto:Sira.Perriki@proton.me">Correo · Sira.Perriki@proton.me</a>
+        </nav>
+      </footer>
     </div>
   );
 }

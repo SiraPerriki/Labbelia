@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { SheetSvg } from "../components/SheetSvg";
 import { LabelSvg } from "../components/LabelSvg";
+import { localize } from "./i18n";
 import { LabelCard, LabelSize, Locale } from "../types";
 
 const A4_WIDTH_MM = 210;
@@ -41,7 +42,7 @@ function exportName(card: LabelCard, locale: Locale): string {
     return `mood-tracker-${card.themeId}`;
   }
 
-  return slugify(card.question.text[locale]) || "label";
+  return slugify(localize(locale, card.question.text)) || "label";
 }
 
 export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale): void {

@@ -1,4 +1,4 @@
-export type Locale = "es" | "en";
+export type Locale = "es" | "en" | "ga";
 
 export type CategoryId =
   | "self"
@@ -10,8 +10,8 @@ export type CategoryId =
   | "creativity"
   | "care";
 
-export type LabelSizeId = "classic" | "wide" | "square";
-export type CardContentMode = "prompt" | "mood";
+export type LabelSizeId = "classic" | "mini" | "wide" | "square";
+export type CardContentMode = "prompt" | "challenge" | "mood";
 
 export type ThemeId =
   | "postage"
@@ -20,10 +20,14 @@ export type ThemeId =
   | "garden-night"
   | "circus-night"
   | "cloud-mail"
+  | "forest-cabin"
   | "sunny-kitchen"
   | "desk-treasures"
   | "flowers"
+  | "bows"
   | "rainbow"
+  | "stripes-vertical"
+  | "stripes-horizontal"
   | "hearts"
   | "geometrics"
   | "stars"
@@ -33,6 +37,7 @@ export type ThemeId =
 export interface LocalizedText {
   es: string;
   en: string;
+  ga?: string;
 }
 
 export interface Category {
@@ -45,6 +50,12 @@ export interface Question {
   id: string;
   category: CategoryId;
   text: LocalizedText;
+}
+
+export interface MoodTrackerTemplate {
+  id: string;
+  title: LocalizedText;
+  rows: LocalizedText[];
 }
 
 export interface LabelSize {
@@ -76,6 +87,7 @@ export interface LabelCard {
   id: string;
   contentMode: CardContentMode;
   question: Question;
+  moodTemplateId?: string;
   themeId: ThemeId;
   paletteIndex: number;
   serial: number;

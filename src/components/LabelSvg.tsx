@@ -1,5 +1,6 @@
 import { PALETTES } from "../data/design";
-import { MOOD_TRACKER_ROWS, MOOD_TRACKER_TITLE } from "../data/mood";
+import { getMoodTrackerRows, getMoodTrackerTemplate, getMoodTrackerTitle } from "../data/mood";
+import { localize } from "../lib/i18n";
 import { LabelCard, LabelSize, Locale, Palette, ThemeId } from "../types";
 
 interface SharedProps {
@@ -373,7 +374,9 @@ function getQuestionBounds(themeId: ThemeId, width: number, height: number): Que
     case "garden-night":
     case "circus-night":
     case "cloud-mail":
+    case "forest-cabin":
     case "desk-treasures":
+    case "bows":
       return squareish
         ? {
             centerX: width * 0.5,
@@ -426,34 +429,117 @@ function getQuestionBounds(themeId: ThemeId, width: number, height: number): Que
   }
 }
 
-function layoutScore(layout: QuestionLayout, bounds: QuestionBounds): number {
+function layoutScore(
+  layout: QuestionLayout,
+  bounds: QuestionBounds,
+  preferredMin: number,
+  metrics: {
+    density: number;
+    textWidthRatio: number;
+    textHeightRatio: number;
+    targetLines: number;
+  },
+): number {
   const maxArea = bounds.maxWidth * bounds.maxHeight;
   const openness = (maxArea - layout.width * layout.height) / maxArea;
+  const undersizedPenalty = Math.max(0, preferredMin - layout.fontSize) * 0.92;
+  const widthUsage = layout.width / bounds.maxWidth;
+  const heightUsage = layout.height / bounds.maxHeight;
+  const linePenalty = Math.max(0, layout.lines.length - metrics.targetLines) * 0.12;
 
-  return layout.fontSize + openness * 0.18 - layout.lines.length * 0.03;
+  return (
+    layout.fontSize * 2.35 -
+    undersizedPenalty +
+    metrics.density * 0.82 +
+    metrics.textWidthRatio * 0.55 +
+    metrics.textHeightRatio * 0.24 +
+    widthUsage * 0.22 +
+    heightUsage * 0.12 -
+    openness * 0.08 -
+    linePenalty
+  );
 }
 
 function getQuestionLayout(text: string, width: number, height: number, themeId: ThemeId): QuestionLayout {
-  const bounds = getQuestionBounds(themeId, width, height);
-  const maxFontSize = height >= 46 ? 3.1 : 2.55;
-  const preferredMin = height >= 46 ? 1.82 : 1.56;
-  const absoluteMin = height >= 46 ? 1.32 : 1.14;
+  const baseBounds = getQuestionBounds(themeId, width, height);
+  const compactLabel = height < 24;
+  const mediumLabel = height < 34;
+  const stripLabel = width / height > 2.45;
+  const bounds = {
+    ...baseBounds,
+    minWidth: clamp(
+      baseBounds.minWidth + (stripLabel ? width * 0.12 : compactLabel ? width * 0.018 : 0),
+      baseBounds.minWidth,
+      width * 0.82,
+    ),
+    maxWidth: clamp(
+      baseBounds.maxWidth +
+        (stripLabel ? width * 0.18 : compactLabel ? width * 0.07 : mediumLabel ? width * 0.035 : 0),
+      baseBounds.minWidth,
+      width * (stripLabel ? 0.92 : 0.78),
+    ),
+    minHeight: clamp(
+      baseBounds.minHeight + (stripLabel ? height * 0.06 : compactLabel ? height * 0.015 : 0),
+      baseBounds.minHeight,
+      height * 0.54,
+    ),
+    maxHeight: clamp(
+      baseBounds.maxHeight +
+        (stripLabel ? height * 0.14 : compactLabel ? height * 0.12 : mediumLabel ? height * 0.06 : 0),
+      baseBounds.minHeight,
+      height * (stripLabel ? 0.62 : 0.52),
+    ),
+  };
+  const maxFontSize = stripLabel ? 3.32 : compactLabel ? 2.72 : height >= 46 ? 3.18 : 2.82;
+  const preferredMin = stripLabel ? 2.08 : compactLabel ? 1.72 : height >= 46 ? 1.92 : 1.72;
+  const absoluteMin = stripLabel ? 1.64 : compactLabel ? 1.3 : height >= 46 ? 1.38 : 1.24;
   let best: QuestionLayout | null = null;
   let emergency: QuestionLayout | null = null;
-  const horizontalPaddingFactor =
-    themeId === "moon" ? 2.18 : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures" ? 1.85 : 3.1;
-  const verticalPaddingFactor =
-    themeId === "moon" ? 1.92 : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures" ? 1.62 : 2.45;
+  let bestScore = -Infinity;
+  const baseHorizontalPaddingFactor =
+    stripLabel
+      ? themeId === "moon"
+        ? 1.06
+        : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures"
+          ? 0.92
+          : 1.2
+      : themeId === "moon"
+        ? 2.18
+        : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures"
+          ? 1.85
+          : 3.1;
+  const baseVerticalPaddingFactor =
+    stripLabel
+      ? themeId === "moon"
+        ? 0.96
+        : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures"
+          ? 0.88
+          : 1.02
+      : themeId === "moon"
+        ? 1.92
+        : themeId === "garden" || themeId === "undersea" || themeId === "circus-night" || themeId === "cloud-mail" || themeId === "desk-treasures"
+          ? 1.62
+          : 2.45;
+  const targetLines = stripLabel ? 2 : compactLabel ? 3 : 4;
 
-  for (let maxChars = 7; maxChars <= 38; maxChars += 1) {
+  for (let maxChars = 7; maxChars <= (stripLabel ? 44 : 38); maxChars += 1) {
     const lines = splitText(text, maxChars);
     const longestLine = lines.reduce((max, line) => Math.max(max, measureLine(line)), 1);
-    const lineUnits = 1 + Math.max(0, lines.length - 1) * 1.13;
+    const lineStep = stripLabel ? 1.08 : 1.13;
+    const lineUnits = 1 + Math.max(0, lines.length - 1) * lineStep;
     const widthFit = (bounds.maxWidth - 4.2) / longestLine;
     const heightFit = (bounds.maxHeight - 3.4) / lineUnits;
     const fontSize = Math.min(maxFontSize, widthFit, heightFit);
     const textWidth = longestLine * fontSize;
-    const textHeight = fontSize + Math.max(0, lines.length - 1) * fontSize * 1.13;
+    const textHeight = fontSize + Math.max(0, lines.length - 1) * fontSize * lineStep;
+    const horizontalPaddingFactor = Math.max(
+      compactLabel ? 0.78 : 0.94,
+      baseHorizontalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.42 : 0.32),
+    );
+    const verticalPaddingFactor = Math.max(
+      compactLabel ? 0.9 : 1.02,
+      baseVerticalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.32 : 0.22),
+    );
     const boxWidth = clamp(
       textWidth + fontSize * horizontalPaddingFactor,
       bounds.minWidth,
@@ -472,27 +558,26 @@ function getQuestionLayout(text: string, width: number, height: number, themeId:
       rx: bounds.rx,
       lines,
       fontSize,
-      lineHeight: fontSize * 1.13,
+      lineHeight: fontSize * lineStep,
     };
-    const candidateScore =
-      fontSize -
-      Math.max(0, preferredMin - fontSize) * 0.55 -
-      lines.length * 0.03 -
-      longestLine * 0.001 +
-      (bounds.maxWidth * bounds.maxHeight - boxWidth * boxHeight) / (bounds.maxWidth * bounds.maxHeight) * 0.18;
+    const candidateScore = layoutScore(candidate, bounds, preferredMin, {
+      density: clamp((textWidth * textHeight) / (boxWidth * boxHeight), 0, 1),
+      textWidthRatio: clamp(textWidth / boxWidth, 0, 1),
+      textHeightRatio: clamp(textHeight / boxHeight, 0, 1),
+      targetLines,
+    });
 
     if (!emergency || fontSize > emergency.fontSize) {
       emergency = candidate;
     }
 
-    if (fontSize < absoluteMin || lines.length > 6) {
+    if (fontSize < absoluteMin || lines.length > (stripLabel ? 6 : 7)) {
       continue;
     }
 
-    const bestScore = best ? layoutScore(best, bounds) : -Infinity;
-
     if (!best || candidateScore > bestScore) {
       best = candidate;
+      bestScore = candidateScore;
     }
   }
 
@@ -518,29 +603,28 @@ function getMoodLayout(title: string, rows: string[], width: number, height: num
   const bounds = {
     centerX: baseBounds.centerX,
     centerY: baseBounds.centerY + (squareish ? height * 0.01 : 0),
-    minWidth: width * (squareish ? 0.56 : 0.42),
-    maxWidth: width * (squareish ? 0.8 : 0.68),
-    minHeight: height * (squareish ? 0.56 : 0.58),
-    maxHeight: height * (squareish ? 0.8 : 0.76),
+    minWidth: width * (squareish ? 0.62 : 0.46),
+    maxWidth: width * (squareish ? 0.86 : 0.72),
+    minHeight: height * (squareish ? 0.62 : 0.6),
+    maxHeight: height * (squareish ? 0.86 : 0.8),
     rx: Math.max(4.4, baseBounds.rx),
   };
   const longestRow = rows.reduce((max, row) => Math.max(max, measureLine(row)), 1);
-  const titleUnits = measureLine(title);
 
-  for (let rowFont = height >= 46 ? 1.76 : 1.42; rowFont >= 0.92; rowFont -= 0.04) {
+  for (let rowFont = height >= 60 ? 2.16 : height >= 46 ? 1.86 : 1.52; rowFont >= 1.04; rowFont -= 0.04) {
     const titleFont = rowFont * 0.88;
-    const starSize = rowFont * 0.58;
+    const starSize = rowFont * 0.62;
     const labelWidth = longestRow * rowFont;
-    const starSpan = starSize * 2 * 5 + starSize * 0.92 * 4;
-    const rowGap = rowFont * 1.4;
-    const contentWidth = labelWidth + rowFont * 1.4 + starSpan;
+    const starSpan = starSize * 2 * 5 + starSize * 0.76 * 4;
+    const rowGap = rowFont * 1.3;
+    const contentWidth = labelWidth + rowFont * 0.98 + starSpan;
     const boxWidth = clamp(
-      Math.max(contentWidth + rowFont * 1.9, titleUnits * titleFont + rowFont * 2.2),
+      contentWidth + rowFont * 1.46,
       bounds.minWidth,
       bounds.maxWidth,
     );
     const boxHeight = clamp(
-      rows.length * rowGap + rowFont * 1.8,
+      rows.length * rowGap + rowFont * 1.42,
       bounds.minHeight,
       bounds.maxHeight,
     );
@@ -566,7 +650,7 @@ function getMoodLayout(title: string, rows: string[], width: number, height: num
     };
   }
 
-  const fallbackRowFont = squareish ? 0.94 : 0.88;
+  const fallbackRowFont = squareish ? 1.16 : 1.02;
 
   return {
     x: bounds.centerX - bounds.maxWidth / 2,
@@ -742,10 +826,10 @@ function QuestionText(props: {
     const rowFontSize = layout.rowFontSize ?? layout.fontSize;
     const starSize = layout.starSize ?? rowFontSize * 0.48;
     const labelWidth = layout.trackerLabelWidth ?? rowFontSize * 7.2;
-    const starGap = starSize * 0.88;
+    const starGap = starSize * 0.76;
     const starsWidth = starSize * 2 * 5 + starGap * 4;
-    const columnGap = rowFontSize * 1.1;
-    const innerPadding = rowFontSize * 0.72;
+    const columnGap = rowFontSize * 0.98;
+    const innerPadding = rowFontSize * 0.58;
     const contentWidth = labelWidth + columnGap + starsWidth + innerPadding * 2;
     const blockX = layout.x + (layout.width - contentWidth) / 2;
     const labelX = blockX + innerPadding;
@@ -2013,6 +2097,53 @@ function RainbowTheme(props: {
   const frameBorder = mixColors(palette.border, rainbow[5], 0.18);
   const frameInner = mixColors(frameBorder, palette.paper, 0.22);
   const panelShadow = mixColors(frameBorder, palette.paper, 0.74);
+  const rainbowSweeps = [
+    {
+      x1: width * -0.18,
+      x2: width * 0.38,
+      y: height * (0.26 + seeded(seed, 10900) * 0.06),
+      lift: height * (0.18 + seeded(seed, 10910) * 0.08),
+      spread: 0.84,
+      widthScale: 1,
+      opacity: 0.84,
+    },
+    {
+      x1: width * 0.28,
+      x2: width * 0.98,
+      y: height * (0.2 + seeded(seed, 10920) * 0.08),
+      lift: height * (0.16 + seeded(seed, 10930) * 0.08),
+      spread: 0.78,
+      widthScale: 0.94,
+      opacity: 0.8,
+    },
+    {
+      x1: width * 0.62,
+      x2: width * 1.12,
+      y: height * (0.62 + seeded(seed, 10940) * 0.08),
+      lift: height * (0.16 + seeded(seed, 10950) * 0.06),
+      spread: 0.82,
+      widthScale: 1.04,
+      opacity: 0.88,
+    },
+    {
+      x1: width * -0.1,
+      x2: width * 0.56,
+      y: height * (0.8 + seeded(seed, 10960) * 0.06),
+      lift: height * (0.18 + seeded(seed, 10970) * 0.07),
+      spread: 0.8,
+      widthScale: 1.08,
+      opacity: 0.86,
+    },
+    {
+      x1: width * 0.18,
+      x2: width * 1.08,
+      y: height * (0.9 + seeded(seed, 10980) * 0.04),
+      lift: height * (0.24 + seeded(seed, 10990) * 0.08),
+      spread: 0.92,
+      widthScale: 1.12,
+      opacity: 0.8,
+    },
+  ];
 
   return (
     <g>
@@ -2033,41 +2164,45 @@ function RainbowTheme(props: {
       <path d={outerPath} fill={mixColors(frameBorder, palette.soft, 0.78)} opacity="0.14" transform="translate(0.7 0.9)" />
       <g clipPath={`url(#${sceneClip})`}>
         <rect x="0" y="0" width={width} height={height} fill={`url(#${outerId})`} />
-        <circle cx={width * 0.18} cy={height * 0.22} r={height * 0.16} fill={mixColors(rainbow[0], palette.paper, 0.84)} opacity="0.16" />
-        <circle cx={width * 0.82} cy={height * 0.78} r={height * 0.18} fill={mixColors(rainbow[5], palette.paper, 0.86)} opacity="0.14" />
-        {Array.from({ length: 11 }).map((_, index) => {
-          const cx = width * (-0.08 + seeded(seed, 10300 + index) * 1.16);
-          const cy = height * (0.1 + seeded(seed, 10340 + index) * 0.74);
-          const radius = height * (0.11 + seeded(seed, 10380 + index) * 0.22);
-          const thickness = 0.54 + seeded(seed, 10420 + index) * 0.78;
-          const arcWidth = radius * (1.5 + seeded(seed, 10460 + index) * 0.65);
+        <circle cx={width * 0.16} cy={height * 0.24} r={height * 0.2} fill={mixColors(rainbow[0], palette.paper, 0.88)} opacity="0.11" />
+        <circle cx={width * 0.84} cy={height * 0.72} r={height * 0.2} fill={mixColors(rainbow[5], palette.paper, 0.88)} opacity="0.11" />
+        {rainbowSweeps.map((sweep, sweepIndex) => {
+          const bandThickness = height * 0.018 * sweep.widthScale;
+          const bandGap = bandThickness * 0.66;
+          const control1X = sweep.x1 + (sweep.x2 - sweep.x1) * 0.3;
+          const control2X = sweep.x1 + (sweep.x2 - sweep.x1) * 0.72;
           return (
-            <g key={`rainbow-arc-${index}`} opacity={0.7 + (index % 3) * 0.08}>
-              {rainbow.map((color, bandIndex) => (
-                <path
-                  key={`rainbow-arc-band-${index}-${bandIndex}`}
-                  d={`M ${cx - arcWidth} ${cy} q ${arcWidth} -${radius - bandIndex * thickness * 0.66} ${arcWidth * 2} 0`}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={thickness}
-                  strokeLinecap="round"
-                  opacity={0.92 - bandIndex * 0.03}
-                />
-              ))}
+            <g key={`rainbow-sweep-${sweepIndex}`} opacity={sweep.opacity}>
+              {rainbow.map((color, bandIndex) => {
+                const offset = bandIndex * bandGap;
+                const y = sweep.y + offset;
+                const lift = Math.max(2.2, sweep.lift - offset * sweep.spread);
+                return (
+                  <path
+                    key={`rainbow-sweep-band-${sweepIndex}-${bandIndex}`}
+                    d={`M ${sweep.x1} ${y} C ${control1X} ${y - lift} ${control2X} ${y - lift * 0.92} ${sweep.x2} ${y}`}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={bandThickness}
+                    strokeLinecap="round"
+                    opacity={0.96 - bandIndex * 0.02}
+                  />
+                );
+              })}
             </g>
           );
         })}
-        {Array.from({ length: 56 }).map((_, index) => {
+        {Array.from({ length: 44 }).map((_, index) => {
           const x = width * (0.02 + seeded(seed, 10500 + index) * 0.96);
           const y = height * (0.04 + seeded(seed, 10560 + index) * 0.92);
-          const size = 0.48 + seeded(seed, 10620 + index) * 1.34;
+          const size = 0.52 + seeded(seed, 10620 + index) * 1.46;
           const color = rainbow[index % rainbow.length];
           return index % 2 === 0 ? (
             <path
               key={`rainbow-star-${index}`}
               d={sparklePath(x, y, size, size * 0.38)}
               fill={color}
-              opacity={0.54 + (index % 3) * 0.12}
+              opacity={0.58 + (index % 3) * 0.12}
             />
           ) : (
             <circle
@@ -2076,15 +2211,15 @@ function RainbowTheme(props: {
               cy={y}
               r={size * 0.28}
               fill={color}
-              opacity={0.44 + (index % 4) * 0.1}
+              opacity={0.52 + (index % 4) * 0.08}
             />
           );
         })}
-        {Array.from({ length: 28 }).map((_, index) => {
-          const x = width * (0.04 + seeded(seed, 10680 + index) * 0.92);
+        {Array.from({ length: 18 }).map((_, index) => {
+          const x = width * (0.06 + seeded(seed, 10680 + index) * 0.88);
           const y = height * (0.08 + seeded(seed, 10720 + index) * 0.84);
-          const w = 2 + seeded(seed, 10760 + index) * 4.2;
-          const h = 0.44 + seeded(seed, 10800 + index) * 0.58;
+          const w = 2.8 + seeded(seed, 10760 + index) * 5.2;
+          const h = 0.58 + seeded(seed, 10800 + index) * 0.76;
           const color = rainbow[(index + 2) % rainbow.length];
           return (
             <rect
@@ -2095,7 +2230,7 @@ function RainbowTheme(props: {
               height={h}
               rx={h / 2}
               fill={color}
-              opacity={0.52 + (index % 3) * 0.12}
+              opacity={0.74}
               transform={`rotate(${seeded(seed, 10840 + index) * 80 - 40} ${x + w / 2} ${y + h / 2})`}
             />
           );
@@ -2109,6 +2244,245 @@ function RainbowTheme(props: {
       <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
     </g>
   );
+}
+
+function StripesTheme(
+  props: {
+    width: number;
+    height: number;
+    palette: Palette;
+    layout: QuestionLayout;
+    clipId: string;
+    lines: string[];
+    seed: number;
+    cardId: string;
+  } & { orientation: "vertical" | "horizontal" },
+) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId, orientation } = props;
+  const outerId = `${cardId}-stripes-outer-${orientation}`;
+  const panelId = `${cardId}-stripes-panel-${orientation}`;
+  const sceneClip = `${cardId}-stripes-scene-${orientation}`;
+  const outerPath = plaquePath(1.2, 1.2, width - 2.4, height - 2.4);
+  const innerPath = plaquePath(4.1, 4.2, width - 8.2, height - 8.4);
+  const panel = {
+    x: layout.x - 0.38,
+    y: layout.y - 0.36,
+    width: layout.width + 0.76,
+    height: layout.height + 0.72,
+    rx: Math.max(2.6, layout.rx - 0.48),
+  };
+  const stripeStories = [
+    ["#ff8fa7", "#ffcc66", "#9fd4a7", "#a9c5ff", "#d7a8ff", "#ffb7c7", "#f4d25d", "#91d8d0"],
+    ["#f9678a", "#fbc547", "#fec2bc", "#a8c8ff", "#bfe2a5", "#caa8ff", "#ffde9a", "#ff9db2"],
+    ["#ffa16f", "#ffd36d", "#8ed3b8", "#8fb6ff", "#ff8ebb", "#c5a4ff", "#79d6d0", "#ffe4a8"],
+    ["#ff8aa1", "#ffb84f", "#9cc78e", "#8cb8d6", "#df9cff", "#f8d0df", "#f0d25d", "#72d0b6"],
+    ["#ff8da8", "#f6c552", "#9edfcf", "#b2c0ff", "#f7a0d0", "#e9bbff", "#ffd789", "#93dca6"],
+  ];
+  const stripeStory = stripeStories[Math.floor(seeded(seed, 5840) * stripeStories.length)] ?? stripeStories[0];
+  const stripeColors = stripeStory.map((color, colorIndex) =>
+    enrichColor(mixColors(color, colorIndex % 2 === 0 ? palette.accent : palette.pop, 0.06 + seeded(seed, 5860 + colorIndex) * 0.18), {
+      hueShift: (seeded(seed, 5890 + colorIndex) - 0.5) * 10,
+      saturationMult: 1.12 + seeded(seed, 5920 + colorIndex) * 0.42,
+      lightnessShift: -0.08 + seeded(seed, 5950 + colorIndex) * 0.08,
+    }),
+  );
+  stripeColors.push(
+    enrichColor(mixColors("#ffffff", palette.paper, 0.04), { saturationMult: 0.82, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#ffd7e6", palette.soft, 0.12), { saturationMult: 1.1, lightnessShift: -0.03 }),
+    enrichColor(mixColors("#b6f0de", palette.soft, 0.16), { saturationMult: 1.1, lightnessShift: -0.07 }),
+  );
+
+  const styleModes = ["pinstripe", "candy", "grouped", "ribbon"] as const;
+  const styleMode = styleModes[Math.floor(seeded(seed, 5980) * styleModes.length)] ?? "grouped";
+  const maxSpan = orientation === "vertical" ? width : height;
+  const bands: Array<{ offset: number; size: number; color: string; opacity: number }> = [];
+  let cursor = -2;
+  let index = 0;
+
+  while (cursor < maxSpan + 2) {
+    const rhythm = seeded(seed, 6040 + index);
+    const clusterIndex = index % 7;
+    let size = 1;
+    let gap = 0.12;
+    let opacity = 0.84;
+
+    if (styleMode === "pinstripe") {
+      const isHero = rhythm > 0.9;
+      size = isHero ? 1.8 + seeded(seed, 6080 + index) * 2.8 : 0.18 + seeded(seed, 6120 + index) * 0.78;
+      gap = 0.02 + seeded(seed, 6160 + index) * (isHero ? 0.28 : 0.16);
+      opacity = isHero ? 0.94 : 0.72 + seeded(seed, 6200 + index) * 0.16;
+    } else if (styleMode === "candy") {
+      const isHero = rhythm > 0.68;
+      size = isHero ? 4.2 + seeded(seed, 6240 + index) * 5.8 : 1.1 + seeded(seed, 6280 + index) * 3.4;
+      gap = 0.04 + seeded(seed, 6320 + index) * 0.22;
+      opacity = isHero ? 0.94 : 0.82 + seeded(seed, 6360 + index) * 0.1;
+    } else if (styleMode === "grouped") {
+      if (clusterIndex === 0) {
+        size = 4.2 + seeded(seed, 6400 + index) * 4.8;
+        gap = 0.08 + seeded(seed, 6440 + index) * 0.18;
+        opacity = 0.92;
+      } else if (clusterIndex <= 3) {
+        size = 0.28 + seeded(seed, 6480 + index) * 0.72;
+        gap = 0.03 + seeded(seed, 6520 + index) * 0.12;
+        opacity = 0.7 + seeded(seed, 6560 + index) * 0.16;
+      } else {
+        size = 1 + seeded(seed, 6600 + index) * 2.2;
+        gap = 0.08 + seeded(seed, 6640 + index) * 0.28;
+        opacity = 0.8 + seeded(seed, 6680 + index) * 0.14;
+      }
+    } else {
+      const isRibbon = rhythm > 0.74;
+      size = isRibbon ? 3 + seeded(seed, 6720 + index) * 7.4 : 0.4 + seeded(seed, 6760 + index) * 1.8;
+      gap = 0.03 + seeded(seed, 6800 + index) * 0.2;
+      opacity = isRibbon ? 0.95 : 0.74 + seeded(seed, 6840 + index) * 0.18;
+    }
+
+    bands.push({
+      offset: cursor,
+      size,
+      color: stripeColors[(index + Math.floor(seeded(seed, 6880 + index) * 3)) % stripeColors.length],
+      opacity,
+    });
+    cursor += size + gap;
+    index += 1;
+  }
+
+  const accentCount = styleMode === "pinstripe" ? 34 : styleMode === "candy" ? 18 : styleMode === "grouped" ? 24 : 22;
+  const glintCount = styleMode === "candy" ? 9 : styleMode === "ribbon" ? 12 : 7;
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors("#fffaf8", palette.paper, 0.02)} />
+          <stop offset="100%" stopColor={mixColors("#fff2f1", palette.soft, 0.18)} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors("#fffefe", palette.paper, 0.02)} />
+          <stop offset="100%" stopColor={mixColors("#fff8fb", palette.paper, 0.12)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.72)} opacity="0.12" transform="translate(0.7 0.9)" />
+      <g clipPath={`url(#${sceneClip})`}>
+        <rect x="0" y="0" width={width} height={height} fill={`url(#${outerId})`} />
+        {bands.map((band, bandIndex) =>
+          orientation === "vertical" ? (
+            <rect
+              key={`stripe-v-${bandIndex}`}
+              x={band.offset}
+              y={0}
+              width={band.size}
+              height={height}
+              fill={band.color}
+              opacity={band.opacity}
+            />
+          ) : (
+            <rect
+              key={`stripe-h-${bandIndex}`}
+              x={0}
+              y={band.offset}
+              width={width}
+              height={band.size}
+              fill={band.color}
+              opacity={band.opacity}
+            />
+          ),
+        )}
+        {Array.from({ length: accentCount }).map((_, accentIndex) => {
+          const accentColor = stripeColors[(accentIndex + 3) % stripeColors.length];
+          const thin =
+            styleMode === "pinstripe"
+              ? 0.08 + seeded(seed, 6920 + accentIndex) * 0.22
+              : styleMode === "candy"
+                ? 0.18 + seeded(seed, 6960 + accentIndex) * 0.68
+                : 0.14 + seeded(seed, 7000 + accentIndex) * 0.5;
+          return orientation === "vertical" ? (
+            <rect
+              key={`stripe-v-accent-${accentIndex}`}
+              x={width * (0.01 + seeded(seed, 7040 + accentIndex) * 0.98)}
+              y={0}
+              width={thin}
+              height={height}
+              fill={accentColor}
+              opacity={0.36 + seeded(seed, 7080 + accentIndex) * 0.22}
+            />
+          ) : (
+            <rect
+              key={`stripe-h-accent-${accentIndex}`}
+              x={0}
+              y={height * (0.01 + seeded(seed, 7120 + accentIndex) * 0.98)}
+              width={width}
+              height={thin}
+              fill={accentColor}
+              opacity={0.36 + seeded(seed, 7160 + accentIndex) * 0.22}
+            />
+          );
+        })}
+        {Array.from({ length: glintCount }).map((_, glintIndex) => {
+          const span = 4 + seeded(seed, 7200 + glintIndex) * 10;
+          const place = 0.02 + seeded(seed, 7240 + glintIndex) * 0.92;
+          const shine = mixColors("#ffffff", stripeColors[(glintIndex + 1) % stripeColors.length], 0.18);
+          return orientation === "vertical" ? (
+            <rect
+              key={`stripe-v-glint-${glintIndex}`}
+              x={width * place}
+              y={0}
+              width={span}
+              height={height}
+              fill={shine}
+              opacity={0.12 + seeded(seed, 7280 + glintIndex) * 0.14}
+            />
+          ) : (
+            <rect
+              key={`stripe-h-glint-${glintIndex}`}
+              x={0}
+              y={height * place}
+              width={width}
+              height={span}
+              fill={shine}
+              opacity={0.12 + seeded(seed, 7320 + glintIndex) * 0.14}
+            />
+          );
+        })}
+      </g>
+      <path d={outerPath} fill="none" stroke={palette.border} strokeWidth="1.08" />
+      <path d={innerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.18)} strokeWidth="0.68" opacity="0.78" />
+      <rect x={panel.x + 0.34} y={panel.y + 0.42} width={panel.width} height={panel.height} rx={panel.rx} fill={mixColors(palette.border, palette.paper, 0.76)} opacity="0.1" />
+      <rect x={panel.x} y={panel.y} width={panel.width} height={panel.height} rx={panel.rx} fill={`url(#${panelId})`} fillOpacity="0.78" stroke={mixColors(palette.border, palette.paper, 0.18)} strokeWidth="0.42" />
+      <rect x={panel.x} y={panel.y} width={panel.width} height={panel.height} rx={panel.rx} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.2)} strokeWidth="0.16" transform="translate(0 0.18)" opacity="0.7" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
+function VerticalStripesTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  return <StripesTheme {...props} orientation="vertical" />;
+}
+
+function HorizontalStripesTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  return <StripesTheme {...props} orientation="horizontal" />;
 }
 
 function StarsTheme(props: {
@@ -2805,17 +3179,108 @@ function CircusNightTheme(props: {
     height: layout.height + 0.8,
     rx: Math.max(2.8, layout.rx - 0.42),
   };
-  const skyTop = mixColors("#2f3550", palette.border, 0.34);
-  const skyMid = mixColors("#6b4f77", palette.accent, 0.34);
-  const skyLow = mixColors("#9a6b74", palette.pop, 0.3);
-  const curtain = enrichColor(mixColors(palette.border, palette.accent, 0.12), { saturationMult: 1.08, lightnessShift: -0.06 });
-  const curtainShade = enrichColor(mixColors(curtain, "#4a2238", 0.42), { saturationMult: 1.04, lightnessShift: -0.04 });
-  const gold = enrichColor(mixColors("#f0cb83", palette.pop, 0.18), { saturationMult: 1.08, lightnessShift: -0.01 });
-  const tentPink = mixColors(palette.accent, palette.paper, 0.2);
-  const tentCream = mixColors("#fff4df", palette.soft, 0.14);
-  const stage = mixColors("#5d4259", palette.border, 0.22);
-  const stageDark = mixColors(stage, curtainShade, 0.28);
+  const hueDrift = (seeded(seed, 5200) - 0.5) * 52;
+  const skyTop = enrichColor(mixColors(palette.border, palette.accent, 0.2), {
+    hueShift: hueDrift - 18,
+    saturationMult: 1.34,
+    lightnessShift: -0.16,
+  });
+  const skyMid = enrichColor(mixColors(palette.accent, palette.soft, 0.22), {
+    hueShift: hueDrift + 4,
+    saturationMult: 1.42,
+    lightnessShift: -0.08,
+  });
+  const skyLow = enrichColor(mixColors(palette.pop, palette.accent, 0.24), {
+    hueShift: hueDrift + 18,
+    saturationMult: 1.28,
+    lightnessShift: -0.04,
+  });
+  const curtain = enrichColor(mixColors(palette.accent, palette.border, 0.2), {
+    hueShift: hueDrift - 6,
+    saturationMult: 1.54,
+    lightnessShift: -0.1,
+  });
+  const curtainShade = enrichColor(mixColors(curtain, palette.border, 0.44), {
+    saturationMult: 1.16,
+    lightnessShift: -0.14,
+  });
+  const gold = enrichColor(mixColors(palette.pop, "#ffd564", 0.22), {
+    saturationMult: 1.34,
+    lightnessShift: -0.02,
+  });
+  const tentPink = enrichColor(mixColors(palette.accent, palette.paper, 0.14), {
+    hueShift: 6 + seeded(seed, 5204) * 20,
+    saturationMult: 1.42,
+    lightnessShift: -0.02,
+  });
+  const tentCream = enrichColor(mixColors(palette.soft, palette.paper, 0.08), {
+    hueShift: -10 + seeded(seed, 5206) * 16,
+    saturationMult: 1.18,
+    lightnessShift: 0.05,
+  });
+  const stage = enrichColor(mixColors(palette.border, palette.accent, 0.34), {
+    hueShift: hueDrift - 10,
+    saturationMult: 1.18,
+    lightnessShift: -0.18,
+  });
+  const stageDark = enrichColor(mixColors(stage, curtainShade, 0.38), {
+    saturationMult: 1.08,
+    lightnessShift: -0.1,
+  });
   const lineSoft = mixColors(palette.paper, curtain, 0.22);
+  const flagPalette = [
+    tentPink,
+    gold,
+    enrichColor(mixColors(palette.soft, palette.paper, 0.12), {
+      hueShift: -24 + seeded(seed, 5210) * 40,
+      saturationMult: 1.24,
+      lightnessShift: -0.02,
+    }),
+    enrichColor(mixColors(palette.border, palette.pop, 0.14), {
+      hueShift: 12 + seeded(seed, 5212) * 34,
+      saturationMult: 1.3,
+      lightnessShift: -0.04,
+    }),
+    enrichColor(mixColors(palette.accent, palette.pop, 0.34), {
+      hueShift: -8 + seeded(seed, 5214) * 28,
+      saturationMult: 1.26,
+      lightnessShift: -0.02,
+    }),
+  ];
+  const tentStripePalette = [
+    enrichColor(mixColors(tentPink, palette.border, 0.1), {
+      saturationMult: 1.2,
+      lightnessShift: -0.02,
+    }),
+    enrichColor(mixColors(gold, palette.paper, 0.2), {
+      saturationMult: 1.16,
+      lightnessShift: 0.02,
+    }),
+    enrichColor(mixColors(palette.soft, palette.paper, 0.08), {
+      hueShift: -18 + seeded(seed, 5216) * 32,
+      saturationMult: 1.2,
+      lightnessShift: 0.02,
+    }),
+  ];
+  const bulbPalette = [
+    gold,
+    tentPink,
+    enrichColor(mixColors(palette.soft, palette.paper, 0.08), {
+      hueShift: -22 + seeded(seed, 5218) * 34,
+      saturationMult: 1.26,
+      lightnessShift: 0.02,
+    }),
+    enrichColor(mixColors(palette.border, palette.pop, 0.12), {
+      hueShift: 10 + seeded(seed, 5220) * 30,
+      saturationMult: 1.24,
+      lightnessShift: 0.02,
+    }),
+    enrichColor(mixColors(palette.accent, palette.pop, 0.44), {
+      hueShift: -6 + seeded(seed, 5222) * 24,
+      saturationMult: 1.22,
+      lightnessShift: -0.01,
+    }),
+  ];
 
   return (
     <g>
@@ -2883,7 +3348,7 @@ function CircusNightTheme(props: {
                 <path d={`M ${x} ${y - 1.2} L ${x} ${y + 0.12}`} fill="none" stroke={mixColors(gold, palette.paper, 0.12)} strokeWidth="0.18" opacity="0.84" />
                 <path
                   d={`M ${x - 1.2} ${y + 0.1} L ${x} ${y + 2.2} L ${x + 1.2} ${y + 0.1} Z`}
-                  fill={index % 3 === 0 ? tentPink : index % 3 === 1 ? gold : mixColors(palette.soft, palette.paper, 0.1)}
+                  fill={flagPalette[index % flagPalette.length] ?? tentPink}
                   opacity="0.94"
                 />
               </g>
@@ -2905,7 +3370,7 @@ function CircusNightTheme(props: {
                 <path
                   key={`circus-mini-tent-stripe-${tentIndex}-${index}`}
                   d={`M ${offset * tentWidth * 0.42} 0 L ${offset * tentWidth * 0.18} -${tentHeight} L ${(offset * tentWidth * 0.18) + tentWidth * 0.22} -${tentHeight} L ${(offset * tentWidth * 0.42) + tentWidth * 0.34} 0 Z`}
-                  fill={index % 2 === 0 ? mixColors(tentPink, palette.border, 0.12) : mixColors(gold, palette.paper, 0.22)}
+                  fill={tentStripePalette[(tentIndex + index) % tentStripePalette.length] ?? tentPink}
                   opacity="0.94"
                 />
               ))}
@@ -2918,14 +3383,7 @@ function CircusNightTheme(props: {
         {Array.from({ length: 16 }).map((_, index) => {
           const bulbX = 8 + index * ((width - 16) / 15);
           const bulbY = height * 0.235 + Math.sin(index * 0.62) * 0.95;
-          const bulbFill =
-            index % 4 === 0
-              ? mixColors(gold, tentPink, 0.18)
-              : index % 4 === 1
-                ? mixColors(gold, palette.paper, 0.08)
-                : index % 4 === 2
-                  ? mixColors(gold, palette.pop, 0.12)
-                  : mixColors(gold, palette.soft, 0.16);
+          const bulbFill = bulbPalette[index % bulbPalette.length] ?? gold;
           return (
             <g key={`circus-bulb-${index}`}>
               <rect x={bulbX - 0.18} y={bulbY - 1.05} width="0.36" height="0.34" rx="0.08" fill={lineSoft} opacity="0.9" />
@@ -3707,7 +4165,7 @@ function GardenTheme(props: {
             transform={`rotate(22 ${width * 0.168} ${height * 0.287})`}
             opacity="0.54"
           />
-          <g transform={`translate(${width * 0.158} ${height * 0.282}) rotate(${seeded(seed, 370) * 10 - 5})`}>
+          <g transform={`translate(${width * 0.158} ${height * 0.298}) rotate(${seeded(seed, 370) * 10 - 5})`}>
             <g transform="translate(0 -1.55) scale(0.72)">
               <path
                 d="M -2.7 0.18 Q -1.8 -1.25 0.12 -1.25 Q 2.1 -1.2 2.72 0.12 Q 1.7 1.2 -0.1 1.18 Q -1.95 1.16 -2.7 0.18 Z"
@@ -3812,7 +4270,7 @@ function GardenTheme(props: {
             opacity={bloom.opacity}
           />
         ))}
-        <g transform={`translate(${width * 0.35} ${height * 0.848}) rotate(${seeded(seed, 390) * 6 - 3})`} opacity="0.92">
+        <g transform={`translate(${width * 0.35} ${height * 0.806}) rotate(${seeded(seed, 390) * 6 - 3})`} opacity="0.92">
           <g transform="scale(0.5)">
             <ellipse cx="0.15" cy="1.88" rx="4.05" ry="0.4" fill={mixColors(meadowDeep, palette.paper, 0.44)} opacity="0.22" />
             <path
@@ -4155,6 +4613,286 @@ function GardenNightTheme(props: {
   );
 }
 
+function ForestCabinTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-forest-outer`;
+  const panelId = `${cardId}-forest-panel`;
+  const sceneClip = `${cardId}-forest-scene`;
+  const outerPath = roundedRectPath(1.2, 1.2, width - 2.4, height - 2.4, 5.6);
+  const panelPath = roundedRectPath(layout.x - 0.5, layout.y - 0.5, layout.width + 1, layout.height + 1, Math.max(2.6, layout.rx - 0.18));
+  const hueDrift = (seeded(seed, 6100) - 0.5) * 56;
+  const skyTop = enrichColor(mixColors(palette.border, palette.soft, 0.16), {
+    hueShift: hueDrift - 18,
+    saturationMult: 1.22,
+    lightnessShift: -0.08,
+  });
+  const skyMid = enrichColor(mixColors(palette.soft, palette.accent, 0.2), {
+    hueShift: hueDrift + 6,
+    saturationMult: 1.2,
+    lightnessShift: -0.02,
+  });
+  const skyBottom = enrichColor(mixColors(palette.pop, palette.paper, 0.16), {
+    hueShift: hueDrift + 16,
+    saturationMult: 1.16,
+    lightnessShift: 0.04,
+  });
+  const hillFar = enrichColor(mixColors(palette.soft, palette.accent, 0.34), {
+    hueShift: hueDrift - 8,
+    saturationMult: 1.18,
+    lightnessShift: -0.1,
+  });
+  const hillNear = enrichColor(mixColors(palette.border, palette.accent, 0.26), {
+    hueShift: hueDrift - 22,
+    saturationMult: 1.18,
+    lightnessShift: -0.18,
+  });
+  const pinePalette = [
+    enrichColor(mixColors(palette.soft, palette.accent, 0.1), {
+      hueShift: -26 + seeded(seed, 6110) * 34,
+      saturationMult: 1.24,
+      lightnessShift: -0.08,
+    }),
+    enrichColor(mixColors(palette.pop, palette.soft, 0.42), {
+      hueShift: 12 + seeded(seed, 6112) * 30,
+      saturationMult: 1.26,
+      lightnessShift: -0.06,
+    }),
+    enrichColor(mixColors(palette.border, palette.accent, 0.18), {
+      hueShift: -12 + seeded(seed, 6114) * 44,
+      saturationMult: 1.2,
+      lightnessShift: -0.12,
+    }),
+    enrichColor(mixColors(palette.accent, palette.paper, 0.08), {
+      hueShift: -34 + seeded(seed, 6116) * 52,
+      saturationMult: 1.18,
+      lightnessShift: -0.08,
+    }),
+  ];
+  const cabinWall = enrichColor(mixColors(palette.pop, palette.accent, 0.34), {
+    hueShift: 4 + seeded(seed, 6120) * 34,
+    saturationMult: 1.3,
+    lightnessShift: -0.02,
+  });
+  const cabinRoof = enrichColor(mixColors(palette.border, palette.accent, 0.2), {
+    hueShift: -22 + seeded(seed, 6122) * 44,
+    saturationMult: 1.16,
+    lightnessShift: -0.18,
+  });
+  const cabinTrim = enrichColor(mixColors(cabinWall, palette.paper, 0.26), {
+    saturationMult: 1.08,
+    lightnessShift: 0.02,
+  });
+  const cabinGlow = enrichColor(mixColors(palette.pop, "#ffe6a4", 0.2), {
+    saturationMult: 1.26,
+    lightnessShift: 0.06,
+  });
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={skyTop} />
+          <stop offset="58%" stopColor={skyMid} />
+          <stop offset="100%" stopColor={skyBottom} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.26)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.18)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.15" transform="translate(0.7 0.85)" />
+      <g clipPath={`url(#${sceneClip})`}>
+        <rect x="0" y="0" width={width} height={height} fill={`url(#${outerId})`} />
+        <circle cx={width * 0.78} cy={height * 0.2} r={height * 0.1} fill={mixColors("#fff3c8", palette.pop, 0.12)} opacity="0.9" />
+        {Array.from({ length: 15 }).map((_, index) => (
+          index % 4 === 0 ? (
+            <path
+              key={`forest-star-${index}`}
+              d={sparklePath(
+                width * (0.08 + seeded(seed, 1500 + index) * 0.84),
+                height * (0.08 + seeded(seed, 1520 + index) * 0.24),
+                0.22 + seeded(seed, 1540 + index) * 0.34,
+                0.08 + seeded(seed, 1560 + index) * 0.12,
+              )}
+              fill={mixColors("#fff9eb", palette.paper, 0.08)}
+              opacity="0.78"
+            />
+          ) : (
+            <circle
+              key={`forest-dot-${index}`}
+              cx={width * (0.08 + seeded(seed, 1500 + index) * 0.84)}
+              cy={height * (0.08 + seeded(seed, 1520 + index) * 0.24)}
+              r={0.16 + seeded(seed, 1540 + index) * 0.18}
+              fill={mixColors("#fffaf2", palette.paper, 0.12)}
+              opacity="0.64"
+            />
+          )
+        ))}
+        <path d={rollingHillPath(width, height, height * 0.72, height * 0.08, seed, 1570)} fill={hillFar} opacity="0.72" />
+        <path d={rollingHillPath(width, height, height * 0.84, height * 0.07, seed, 1580)} fill={hillNear} opacity="0.82" />
+        {Array.from({ length: 9 }).map((_, index) => {
+          const x = width * (0.05 + index * 0.11 + seeded(seed, 1600 + index) * 0.03);
+          const baseY = height * (0.78 + seeded(seed, 1620 + index) * 0.08);
+          const treeHeight = height * (0.14 + seeded(seed, 1640 + index) * 0.12);
+          const treeWidth = treeHeight * (0.22 + seeded(seed, 1660 + index) * 0.08);
+          const crown = pinePalette[index % pinePalette.length] ?? hillFar;
+          const crownHighlight = enrichColor(mixColors(crown, palette.paper, 0.14), {
+            saturationMult: 1.08,
+            lightnessShift: 0.05,
+          });
+          const trunk = enrichColor(mixColors(cabinRoof, crown, 0.32), {
+            saturationMult: 1.04,
+            lightnessShift: -0.04,
+          });
+
+          return (
+            <g key={`pine-${index}`} transform={`translate(${x} ${baseY})`}>
+              <rect x={-0.18} y={-treeHeight * 0.1} width={0.36} height={treeHeight * 0.18} rx={0.12} fill={trunk} />
+              <path d={`M 0 ${-treeHeight} L ${treeWidth} ${-treeHeight * 0.32} L ${-treeWidth} ${-treeHeight * 0.32} Z`} fill={crown} />
+              <path d={`M 0 ${-treeHeight * 0.74} L ${treeWidth * 0.86} ${-treeHeight * 0.12} L ${-treeWidth * 0.86} ${-treeHeight * 0.12} Z`} fill={crownHighlight} />
+            </g>
+          );
+        })}
+        <g transform={`translate(${width * 0.16} ${height * 0.71})`}>
+          <rect x={-4.6} y={-3.3} width={9.2} height={5.8} rx={0.9} fill={cabinWall} />
+          <path d="M -5.2 -3.05 L 0 -6.3 L 5.2 -3.05 Z" fill={cabinRoof} />
+          <rect x={-1.15} y={-1.95} width={2.3} height={2.3} rx={0.5} fill={cabinGlow} opacity="0.96" />
+          <rect x={-0.95} y={-1.75} width={1.9} height={1.9} rx={0.34} fill={mixColors("#fff8d6", palette.paper, 0.08)} />
+          <path d="M -0.02 -1.75 V 0.15 M -0.95 -0.8 H 0.95" stroke={cabinTrim} strokeWidth="0.16" opacity="0.68" />
+        </g>
+        <path d={`M ${width * 0.12} ${height * 0.2} C ${width * 0.2} ${height * 0.17}, ${width * 0.28} ${height * 0.15}, ${width * 0.34} ${height * 0.12}`} fill="none" stroke={mixColors("#fff6e0", palette.paper, 0.12)} strokeWidth="0.3" opacity="0.5" strokeLinecap="round" />
+      </g>
+      <path d={outerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.04" />
+      <path d={roundedRectPath(4.1, 4.1, width - 8.2, height - 8.2, 4.6)} fill="none" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.68" opacity="0.74" />
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.08" transform="translate(0.45 0.56)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.5" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.4)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.72" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
+function BowsTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-bows-outer`;
+  const panelId = `${cardId}-bows-panel`;
+  const outerPath = roundedRectPath(1.2, 1.2, width - 2.4, height - 2.4, 5.4);
+  const innerPath = roundedRectPath(4, 4, width - 8, height - 8, 4.2);
+  const panelPath = roundedRectPath(layout.x - 0.44, layout.y - 0.44, layout.width + 0.88, layout.height + 0.88, Math.max(2.5, layout.rx - 0.16));
+  const butterflyColors = [
+    mixColors("#f5a8bd", palette.accent, 0.14),
+    mixColors("#a6d8d5", palette.soft, 0.18),
+    mixColors("#f7cf87", palette.pop, 0.12),
+    mixColors("#d7b9ee", palette.accent, 0.2),
+    mixColors("#ffb9a2", palette.pop, 0.16),
+  ];
+  const butterflies = Array.from({ length: 18 }).map((_, index) => ({
+    x: width * (0.1 + seeded(seed, 1800 + index) * 0.8),
+    y: height * (0.14 + seeded(seed, 1820 + index) * 0.7),
+    scale: 0.42 + seeded(seed, 1840 + index) * 0.58,
+    angle: seeded(seed, 1860 + index) * 34 - 17,
+    color: butterflyColors[index % butterflyColors.length],
+    opacity: 0.42 + seeded(seed, 1880 + index) * 0.22,
+  }));
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.22)} />
+          <stop offset="100%" stopColor={mixColors(palette.soft, palette.paper, 0.2)} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.18)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.16)} />
+        </linearGradient>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.64)} opacity="0.12" transform="translate(0.68 0.9)" />
+      <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.14)} strokeWidth="1.06" />
+      <path d={innerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.24)} strokeWidth="0.66" opacity="0.72" />
+      {butterflies.map((butterfly, index) => (
+        <g
+          key={`butterfly-${index}`}
+          transform={`translate(${butterfly.x} ${butterfly.y}) rotate(${butterfly.angle}) scale(${butterfly.scale})`}
+          opacity={butterfly.opacity}
+        >
+          <ellipse cx="-1.36" cy="-0.98" rx="1.18" ry="1.64" fill={butterfly.color} transform="rotate(-24 -1.36 -0.98)" />
+          <ellipse cx="1.36" cy="-0.98" rx="1.18" ry="1.64" fill={mixColors(butterfly.color, palette.paper, 0.04)} transform="rotate(24 1.36 -0.98)" />
+          <ellipse cx="-0.96" cy="1.02" rx="0.84" ry="1.08" fill={mixColors(butterfly.color, palette.soft, 0.12)} transform="rotate(18 -0.96 1.02)" />
+          <ellipse cx="0.96" cy="1.02" rx="0.84" ry="1.08" fill={mixColors(butterfly.color, palette.paper, 0.08)} transform="rotate(-18 0.96 1.02)" />
+          <rect x={-0.24} y={-1.68} width={0.48} height={3.5} rx={0.2} fill={mixColors(palette.border, butterfly.color, 0.28)} />
+          <circle cx="0" cy="-1.86" r="0.24" fill={mixColors(palette.border, palette.paper, 0.12)} />
+          <path d="M -0.08 -1.86 Q -0.58 -2.74 -1.12 -2.78" fill="none" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.09" strokeLinecap="round" />
+          <path d="M 0.08 -1.86 Q 0.58 -2.74 1.12 -2.78" fill="none" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.09" strokeLinecap="round" />
+          <path d="M -0.7 -0.8 C -1.02 -0.66 -1.18 -0.26 -1.1 0.12" fill="none" stroke={mixColors(palette.paper, butterfly.color, 0.14)} strokeWidth="0.08" opacity="0.54" />
+          <path d="M 0.7 -0.8 C 1.02 -0.66 1.18 -0.26 1.1 0.12" fill="none" stroke={mixColors(palette.paper, butterfly.color, 0.14)} strokeWidth="0.08" opacity="0.54" />
+        </g>
+      ))}
+      {Array.from({ length: 22 }).map((_, index) => (
+        <circle
+          key={`butterfly-dot-${index}`}
+          cx={width * (0.06 + seeded(seed, 1900 + index) * 0.88)}
+          cy={height * (0.1 + seeded(seed, 1920 + index) * 0.8)}
+          r={0.14 + seeded(seed, 1940 + index) * 0.18}
+          fill={index % 3 === 0 ? palette.pop : index % 2 === 0 ? palette.accent : mixColors(palette.soft, palette.paper, 0.06)}
+          opacity={0.56}
+        />
+      ))}
+      {Array.from({ length: 8 }).map((_, index) => (
+        <path
+          key={`butterfly-trail-${index}`}
+          d={`M ${width * (0.08 + seeded(seed, 2010 + index) * 0.82)} ${height * (0.14 + seeded(seed, 2030 + index) * 0.7)} C ${width * (0.14 + seeded(seed, 2050 + index) * 0.74)} ${height * (0.2 + seeded(seed, 2070 + index) * 0.56)}, ${width * (0.18 + seeded(seed, 2090 + index) * 0.7)} ${height * (0.12 + seeded(seed, 2110 + index) * 0.66)}, ${width * (0.22 + seeded(seed, 2130 + index) * 0.66)} ${height * (0.18 + seeded(seed, 2150 + index) * 0.54)}`}
+          fill="none"
+          stroke={mixColors(palette.soft, palette.paper, 0.12)}
+          strokeWidth="0.16"
+          strokeLinecap="round"
+          strokeDasharray="0.48 0.64"
+          opacity="0.34"
+        />
+      ))}
+      {Array.from({ length: 6 }).map((_, index) => (
+        <path
+          key={`butterfly-heart-${index}`}
+          d={heartPath(
+            width * (0.12 + seeded(seed, 1960 + index) * 0.76),
+            height * (0.16 + seeded(seed, 1980 + index) * 0.68),
+            0.42 + seeded(seed, 2000 + index) * 0.22,
+          )}
+          fill={mixColors("#ffd7df", palette.accent, 0.1)}
+          opacity="0.28"
+        />
+      ))}
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.06" transform="translate(0.4 0.52)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.48" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.4)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.72" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.2)} lines={lines} />
+    </g>
+  );
+}
+
 function renderThemeArt(props: {
   width: number;
   height: number;
@@ -4179,14 +4917,22 @@ function renderThemeArt(props: {
       return <CircusNightTheme {...props} />;
     case "cloud-mail":
       return <CloudMailTheme {...props} />;
+    case "forest-cabin":
+      return <ForestCabinTheme {...props} />;
     case "sunny-kitchen":
       return <SunnyKitchenTheme {...props} />;
     case "desk-treasures":
       return <DeskTreasuresTheme {...props} />;
     case "flowers":
       return <FlowersTheme {...props} />;
+    case "bows":
+      return <BowsTheme {...props} />;
     case "rainbow":
       return <RainbowTheme {...props} />;
+    case "stripes-vertical":
+      return <VerticalStripesTheme {...props} />;
+    case "stripes-horizontal":
+      return <HorizontalStripesTheme {...props} />;
     case "hearts":
       return <HeartsTheme {...props} />;
     case "geometrics":
@@ -4206,17 +4952,17 @@ function LabelArt(props: ArtProps) {
   const { card, width, height, locale } = props;
   const tunedPalette = tunePalette(PALETTES[card.paletteIndex % PALETTES.length], card.seed);
   const palette = card.themeId === "garden-night" ? moonlitPalette(tunedPalette) : tunedPalette;
-  const contentTitle = card.contentMode === "mood" ? MOOD_TRACKER_TITLE[locale] : card.question.text[locale];
+  const moodTemplate = getMoodTrackerTemplate(card.moodTemplateId);
   const layout =
     card.contentMode === "mood"
       ? getMoodLayout(
-          MOOD_TRACKER_TITLE[locale],
-          MOOD_TRACKER_ROWS.map((row) => row[locale]),
+          localize(locale, getMoodTrackerTitle(moodTemplate.id)),
+          getMoodTrackerRows(moodTemplate.id).map((row) => localize(locale, row)),
           width,
           height,
           card.themeId,
         )
-      : getQuestionLayout(card.question.text[locale], width, height, card.themeId);
+      : getQuestionLayout(localize(locale, card.question.text), width, height, card.themeId);
   const clipId = `question-clip-${card.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const cardId = `label-${card.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
@@ -4237,8 +4983,8 @@ export function LabelSvg(props: SharedProps) {
   const { size } = props;
   const ariaLabel =
     props.card.contentMode === "mood"
-      ? MOOD_TRACKER_TITLE[props.locale]
-      : props.card.question.text[props.locale];
+      ? localize(props.locale, getMoodTrackerTitle(props.card.moodTemplateId))
+      : localize(props.locale, props.card.question.text);
 
   return (
     <svg

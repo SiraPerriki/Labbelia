@@ -2,14 +2,34 @@ import { LabelSize, Palette, ThemeDefinition } from "../types";
 
 export const LABEL_SIZES: LabelSize[] = [
   {
+    id: "mini",
+    name: {
+      es: "Mini",
+      en: "Mini",
+      ga: "Mini",
+    },
+    description: {
+      es: "66.8 x 27.4 mm · 30 tiritas por A4",
+      en: "66.8 x 27.4 mm · 30 strips per A4",
+      ga: "66.8 x 27.4 mm · 30 etiquetas por A4",
+    },
+    widthMm: 66.8,
+    heightMm: 27.4,
+    columns: 3,
+    rows: 10,
+    gapMm: 1.5,
+  },
+  {
     id: "classic",
     name: {
-      es: "Clasica",
+      es: "Clásica",
       en: "Classic",
+      ga: "Clasica",
     },
     description: {
       es: "63.5 x 38.1 mm · 21 etiquetas por A4",
       en: "63.5 x 38.1 mm · 21 labels per A4",
+      ga: "63.5 x 38.1 mm · 21 etiquetas por A4",
     },
     widthMm: 63.5,
     heightMm: 38.1,
@@ -22,10 +42,12 @@ export const LABEL_SIZES: LabelSize[] = [
     name: {
       es: "Ticket ancho",
       en: "Wide ticket",
+      ga: "Ticket ancho",
     },
     description: {
       es: "88.9 x 50.8 mm · 10 etiquetas por A4",
       en: "88.9 x 50.8 mm · 10 labels per A4",
+      ga: "88.9 x 50.8 mm · 10 etiquetas por A4",
     },
     widthMm: 88.9,
     heightMm: 50.8,
@@ -38,16 +60,18 @@ export const LABEL_SIZES: LabelSize[] = [
     name: {
       es: "Cuadrada",
       en: "Square",
+      ga: "Cadrada",
     },
     description: {
-      es: "50.8 x 50.8 mm · 15 etiquetas por A4",
-      en: "50.8 x 50.8 mm · 15 labels per A4",
+      es: "66 x 66 mm · 12 trackers por A4",
+      en: "66 x 66 mm · 12 trackers per A4",
+      ga: "66 x 66 mm · 12 trackers por A4",
     },
-    widthMm: 50.8,
-    heightMm: 50.8,
+    widthMm: 66,
+    heightMm: 66,
     columns: 3,
-    rows: 5,
-    gapMm: 4,
+    rows: 4,
+    gapMm: 2.2,
   },
 ];
 
@@ -57,6 +81,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Correo de papel",
       en: "Paper post",
+      ga: "Correo de papel",
     },
   },
   {
@@ -64,21 +89,24 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Cielo de bolsillo",
       en: "Pocket sky",
+      ga: "Ceo de peto",
     },
   },
   {
     id: "garden",
     name: {
-      es: "Jardin secreto",
+      es: "Jardín secreto",
       en: "Secret garden",
+      ga: "Xardin secreto",
     },
   },
   // Temporarily disabled from rotation while we rework it.
   // {
   //   id: "garden-night",
   //   name: {
-  //     es: "Jardin nocturno",
+  //     es: "Jardín nocturno",
   //     en: "Night garden",
+  //     ga: "Xardin nocturno",
   //   },
   // },
   {
@@ -86,6 +114,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Circo nocturno",
       en: "Circus night",
+      ga: "Circo nocturno",
     },
   },
   {
@@ -93,6 +122,15 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Correo en nubes",
       en: "Cloud mail",
+      ga: "Correo nas nubes",
+    },
+  },
+  {
+    id: "forest-cabin",
+    name: {
+      es: "Cabana del bosque",
+      en: "Forest cabin",
+      ga: "Cabana do bosque",
     },
   },
   {
@@ -100,6 +138,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Cocina soleada",
       en: "Sunny kitchen",
+      ga: "Cocina soleada",
     },
   },
   {
@@ -107,6 +146,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Tesoro de escritorio",
       en: "Desk treasures",
+      ga: "Tesouro de escritorio",
     },
   },
   {
@@ -114,13 +154,39 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Lluvia de flores",
       en: "Flower confetti",
+      ga: "Choiva de flores",
+    },
+  },
+  {
+    id: "bows",
+    name: {
+      es: "Mariposas",
+      en: "Butterflies",
+      ga: "Bolboretas",
     },
   },
   {
     id: "rainbow",
     name: {
-      es: "Arcoiris",
+      es: "Arcoíris",
       en: "Rainbow",
+      ga: "Arco da vella",
+    },
+  },
+  {
+    id: "stripes-vertical",
+    name: {
+      es: "Rayas verticales",
+      en: "Vertical stripes",
+      ga: "Raias verticais",
+    },
+  },
+  {
+    id: "stripes-horizontal",
+    name: {
+      es: "Rayas horizontales",
+      en: "Horizontal stripes",
+      ga: "Raias horizontais",
     },
   },
   {
@@ -128,6 +194,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Lluvia de corazones",
       en: "Heart confetti",
+      ga: "Choiva de corazons",
     },
   },
   {
@@ -135,6 +202,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Trama bonita",
       en: "Pretty weave",
+      ga: "Trama bonita",
     },
   },
   {
@@ -142,13 +210,15 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Lluvia de estrellas",
       en: "Star confetti",
+      ga: "Choiva de estrelas",
     },
   },
   {
     id: "confetti",
     name: {
-      es: "Confetti dulce",
+      es: "Confeti dulce",
       en: "Sweet confetti",
+      ga: "Confetti doce",
     },
   },
   {
@@ -156,6 +226,7 @@ export const THEMES: ThemeDefinition[] = [
     name: {
       es: "Fondo marino",
       en: "Undersea",
+      ga: "Fondo marino",
     },
   },
 ];

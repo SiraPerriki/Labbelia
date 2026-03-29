@@ -28,25 +28,43 @@ function slotPosition(index: number, size: LabelSize) {
 export function SheetSvg(props: SheetSvgProps) {
   const { cards, locale, size, showPlaceholders = false } = props;
   const capacity = size.columns * size.rows;
+  const ariaLabel =
+    locale === "en"
+      ? "Printable A4 label sheet"
+      : locale === "ga"
+        ? "Folla A4 imprimible de etiquetas"
+        : "Hoja A4 imprimible de etiquetas";
 
   return (
     <svg
       viewBox={`0 0 ${A4_WIDTH_MM} ${A4_HEIGHT_MM}`}
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Printable A4 label sheet"
+      aria-label={ariaLabel}
     >
-      <rect width={A4_WIDTH_MM} height={A4_HEIGHT_MM} fill="#fcf6ed" />
+      <rect width={A4_WIDTH_MM} height={A4_HEIGHT_MM} fill="#ffffff" />
       <rect
-        x={4}
-        y={4}
-        width={A4_WIDTH_MM - 8}
-        height={A4_HEIGHT_MM - 8}
-        rx={4}
+        x={2.5}
+        y={2.5}
+        width={A4_WIDTH_MM - 5}
+        height={A4_HEIGHT_MM - 5}
+        rx={3.2}
         fill="none"
         stroke="#d9c8b7"
-        strokeWidth="0.8"
+        strokeWidth="0.7"
       />
+      <text
+        x={A4_WIDTH_MM - 5}
+        y={A4_HEIGHT_MM - 3.4}
+        textAnchor="end"
+        fontFamily="Nunito, Segoe UI, sans-serif"
+        fontSize="2.4"
+        fontWeight="700"
+        letterSpacing="0.08"
+        fill="#b49e8f"
+      >
+        @SiraPerriki
+      </text>
       {Array.from({ length: capacity }).map((_, index) => {
         const position = slotPosition(index, size);
         const card = cards[index];
@@ -77,7 +95,7 @@ export function SheetSvg(props: SheetSvgProps) {
               width={size.widthMm}
               height={size.heightMm}
               rx={5}
-              fill="#fffaf4"
+              fill="#ffffff"
               stroke="#dbc9b8"
               strokeDasharray="2.2 2.6"
               strokeWidth="0.8"
@@ -88,4 +106,3 @@ export function SheetSvg(props: SheetSvgProps) {
     </svg>
   );
 }
-
