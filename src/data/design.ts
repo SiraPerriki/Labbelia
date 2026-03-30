@@ -134,6 +134,38 @@ export const THEMES: ThemeDefinition[] = [
     },
   },
   {
+    id: "mushrooms",
+    name: {
+      es: "Setitas suaves",
+      en: "Soft mushrooms",
+      ga: "Cogomelos suaves",
+    },
+  },
+  {
+    id: "ribbons",
+    name: {
+      es: "Cintas bonitas",
+      en: "Pretty ribbons",
+      ga: "Cintas bonitas",
+    },
+  },
+  {
+    id: "fruits",
+    name: {
+      es: "Frutitas",
+      en: "Little fruits",
+      ga: "Froitiñas",
+    },
+  },
+  {
+    id: "kawaii-clouds",
+    name: {
+      es: "Nubes kawaii",
+      en: "Kawaii clouds",
+      ga: "Nubes kawaii",
+    },
+  },
+  {
     id: "sunny-kitchen",
     name: {
       es: "Cocina soleada",

@@ -12,6 +12,7 @@ import { localize } from "./lib/i18n";
 import { CardContentMode, LabelCard, LabelSizeId, Locale } from "./types";
 
 const BATCH_SIZE = 1;
+const UI_THEME_STORAGE_KEY = "labbelia-ui-theme-v2";
 
 function text(locale: Locale, value: { es: string; en: string }): string {
   return localize(locale, value);
@@ -21,6 +22,21 @@ function App() {
   const [locale, setLocale] = useState<Locale>(() => {
     const stored = window.localStorage.getItem("paper-hearts-locale");
     return stored === "en" ? "en" : "es";
+  });
+  const [uiTheme, setUiTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") {
+      return "dark";
+    }
+
+    const stored = window.localStorage.getItem(UI_THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") {
+      return stored;
+    }
+
+    // Migrate old sessions to dark once, then keep respecting future user choices.
+    window.localStorage.setItem(UI_THEME_STORAGE_KEY, "dark");
+    window.localStorage.setItem("labbelia-ui-theme", "dark");
+    return "dark";
   });
   const [contentMode, setContentMode] = useState<CardContentMode>("prompt");
   const [candidates, setCandidates] = useState<LabelCard[]>([]);
@@ -55,6 +71,11 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem("paper-hearts-locale", locale);
   }, [locale]);
+
+  useEffect(() => {
+    window.localStorage.setItem(UI_THEME_STORAGE_KEY, uiTheme);
+    window.localStorage.setItem("labbelia-ui-theme", uiTheme);
+  }, [uiTheme]);
 
   useEffect(() => {
     function syncTopbarMode() {
@@ -315,7 +336,10 @@ function App() {
   const currentCard = candidates[0];
   const brandBlock = (
     <div className="topbar-copy">
-      <div className="brand-mark" aria-hidden="true">L</div>
+      <div className="brand-mark" aria-hidden="true">
+        <span className="brand-mark-glyph brand-mark-glyph-heart">♥</span>
+        <span className="brand-mark-glyph brand-mark-glyph-letter">L</span>
+      </div>
       <div className="brand-lockup">
         <div className="brand-title-row">
           <p className="eyebrow">{text(locale, UI_COPY.appTitle)}</p>
@@ -350,6 +374,27 @@ function App() {
         </button>
       </div>
       <span className="topbar-separator" aria-hidden="true" />
+      <div
+        className="theme-toggle"
+        role="tablist"
+        aria-label={locale === "en" ? "Interface theme" : "Tema de interfaz"}
+      >
+        <button
+          className={uiTheme === "light" ? "active" : ""}
+          onClick={() => setUiTheme("light")}
+          type="button"
+        >
+          {locale === "en" ? "☀ Light" : "☀ Claro"}
+        </button>
+        <button
+          className={uiTheme === "dark" ? "active" : ""}
+          onClick={() => setUiTheme("dark")}
+          type="button"
+        >
+          {locale === "en" ? "☾ Dark" : "☾ Oscuro"}
+        </button>
+      </div>
+      <span className="topbar-separator" aria-hidden="true" />
       <div className="language-toggle language-toggle-compact" role="tablist" aria-label={locale === "en" ? "Language switcher" : "Selector de idioma"}>
         <button
           className={locale === "es" ? "active" : ""}
@@ -370,7 +415,7 @@ function App() {
   );
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-ui-theme={uiTheme}>
       <div className="ambient ambient-left" />
       <div className="ambient ambient-right" />
       <header className={`topbar card-surface ${compactTopbar ? "topbar-compact" : ""}`}>
@@ -421,14 +466,16 @@ function App() {
                     <div className="focus-heading">
                       <span className="focus-kicker">
                         {contentMode === "mood"
-                          ? localize(locale, getMoodTrackerTitle(currentCard.moodTemplateId))
+                          ? locale === "en"
+                            ? "Tracker"
+                            : "Tracker"
                           : contentMode === "challenge"
                             ? locale === "en"
-                              ? "Creative challenge"
-                              : "Reto creativo"
+                              ? "Creative strip"
+                              : "Tirita creativa"
                           : locale === "en"
-                            ? "Prompt"
-                            : "Pregunta"}
+                            ? "Strip"
+                            : "Tirita"}
                       </span>
                     </div>
                     <div className="focus-status-strip">
@@ -537,11 +584,11 @@ function App() {
                 {contentMode === "mood"
                   ? locale === "en"
                     ? "Build a compact mood sheet ready to print."
-                    : "Compón una hoja compacta de seguimiento lista para imprimir."
+                    : "Compón una hoja de seguimiento."
                   : contentMode === "challenge"
                     ? locale === "en"
-                      ? "Fill the page with creative nudges worth keeping."
-                      : "Llena la página con retos creativos que merezca la pena guardar."
+                      ? "Fill the page with creative challenges."
+                      : "Llena la página con retos creativos."
                     : text(locale, UI_COPY.sheetSubtitle)}
               </p>
             </div>
@@ -562,15 +609,6 @@ function App() {
           </div>
 
           <div className="sheet-settings orbit-card">
-            <span className="control-label">
-              {contentMode === "mood"
-                ? locale === "en"
-                  ? "Square format"
-                  : "Formato cuadrado"
-                : locale === "en"
-                  ? "Strip format"
-                  : "Formato tirita"}
-            </span>
             <div className="sheet-format-summary">
               <strong>
                 {contentMode === "mood"
@@ -585,7 +623,6 @@ function App() {
                     ? "Mini journaling strips"
                     : "Tiritas mini para journaling"}
               </strong>
-              <span>{localize(locale, size.description)}</span>
             </div>
           </div>
 
@@ -672,9 +709,18 @@ function App() {
           </p>
         </div>
         <nav className="site-footer-links" aria-label="Enlaces de Labbelia">
-          <a href="https://x.com/SiraPerriki" target="_blank" rel="noreferrer">X · @SiraPerriki</a>
-          <a href="https://github.com/SiraPerriki" target="_blank" rel="noreferrer">GitHub · @SiraPerriki</a>
-          <a href="mailto:Sira.Perriki@proton.me">Correo · Sira.Perriki@proton.me</a>
+          <a href="https://x.com/SiraPerriki" target="_blank" rel="noreferrer">
+            <span className="site-footer-link-symbol site-footer-link-symbol-x">✦</span>
+            <span>X · @SiraPerriki</span>
+          </a>
+          <a href="https://github.com/SiraPerriki" target="_blank" rel="noreferrer">
+            <span className="site-footer-link-symbol site-footer-link-symbol-github">⌘</span>
+            <span>GitHub · @SiraPerriki</span>
+          </a>
+          <a href="mailto:Sira.Perriki@proton.me">
+            <span className="site-footer-link-symbol site-footer-link-symbol-mail">✉</span>
+            <span>Correo · Sira.Perriki@proton.me</span>
+          </a>
         </nav>
       </footer>
     </div>

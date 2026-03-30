@@ -375,6 +375,10 @@ function getQuestionBounds(themeId: ThemeId, width: number, height: number): Que
     case "circus-night":
     case "cloud-mail":
     case "forest-cabin":
+    case "mushrooms":
+    case "ribbons":
+    case "fruits":
+    case "kawaii-clouds":
     case "desk-treasures":
     case "bows":
       return squareish
@@ -603,23 +607,23 @@ function getMoodLayout(title: string, rows: string[], width: number, height: num
   const bounds = {
     centerX: baseBounds.centerX,
     centerY: baseBounds.centerY + (squareish ? height * 0.01 : 0),
-    minWidth: width * (squareish ? 0.62 : 0.46),
-    maxWidth: width * (squareish ? 0.86 : 0.72),
-    minHeight: height * (squareish ? 0.62 : 0.6),
-    maxHeight: height * (squareish ? 0.86 : 0.8),
+    minWidth: width * (squareish ? 0.74 : 0.52),
+    maxWidth: width * (squareish ? 0.94 : 0.78),
+    minHeight: height * (squareish ? 0.74 : 0.66),
+    maxHeight: height * (squareish ? 0.94 : 0.86),
     rx: Math.max(4.4, baseBounds.rx),
   };
   const longestRow = rows.reduce((max, row) => Math.max(max, measureLine(row)), 1);
 
-  for (let rowFont = height >= 60 ? 2.16 : height >= 46 ? 1.86 : 1.52; rowFont >= 1.04; rowFont -= 0.04) {
+  for (let rowFont = height >= 60 ? 2.9 : height >= 46 ? 2.42 : 1.9; rowFont >= 1.28; rowFont -= 0.04) {
     const titleFont = rowFont * 0.88;
-    const starSize = rowFont * 0.62;
-    const labelWidth = longestRow * rowFont;
-    const starSpan = starSize * 2 * 5 + starSize * 0.76 * 4;
-    const rowGap = rowFont * 1.3;
-    const contentWidth = labelWidth + rowFont * 0.98 + starSpan;
+    const starSize = rowFont * 0.66;
+    const labelWidth = longestRow * rowFont * 0.92;
+    const starSpan = starSize * 2 * 5 + starSize * 0.54 * 4;
+    const rowGap = rowFont * 1.54;
+    const contentWidth = labelWidth + rowFont * 0.66 + starSpan;
     const boxWidth = clamp(
-      contentWidth + rowFont * 1.46,
+      contentWidth + rowFont * 0.92,
       bounds.minWidth,
       bounds.maxWidth,
     );
@@ -650,7 +654,7 @@ function getMoodLayout(title: string, rows: string[], width: number, height: num
     };
   }
 
-  const fallbackRowFont = squareish ? 1.16 : 1.02;
+  const fallbackRowFont = squareish ? 1.52 : 1.24;
 
   return {
     x: bounds.centerX - bounds.maxWidth / 2,
@@ -660,12 +664,12 @@ function getMoodLayout(title: string, rows: string[], width: number, height: num
     rx: bounds.rx,
     lines: [title, ...rows],
     fontSize: fallbackRowFont,
-    lineHeight: fallbackRowFont * 1.4,
+    lineHeight: fallbackRowFont * 1.76,
     variant: "mood",
     titleFontSize: fallbackRowFont * 0.88,
     rowFontSize: fallbackRowFont,
-    trackerLabelWidth: longestRow * fallbackRowFont,
-    starSize: fallbackRowFont * 0.58,
+    trackerLabelWidth: longestRow * fallbackRowFont * 0.92,
+    starSize: fallbackRowFont * 0.66,
   };
 }
 
@@ -826,10 +830,10 @@ function QuestionText(props: {
     const rowFontSize = layout.rowFontSize ?? layout.fontSize;
     const starSize = layout.starSize ?? rowFontSize * 0.48;
     const labelWidth = layout.trackerLabelWidth ?? rowFontSize * 7.2;
-    const starGap = starSize * 0.76;
+    const starGap = starSize * 0.54;
     const starsWidth = starSize * 2 * 5 + starGap * 4;
-    const columnGap = rowFontSize * 0.98;
-    const innerPadding = rowFontSize * 0.58;
+    const columnGap = rowFontSize * 0.66;
+    const innerPadding = rowFontSize * 0.34;
     const contentWidth = labelWidth + columnGap + starsWidth + innerPadding * 2;
     const blockX = layout.x + (layout.width - contentWidth) / 2;
     const labelX = blockX + innerPadding;
@@ -4785,6 +4789,614 @@ function ForestCabinTheme(props: {
   );
 }
 
+function MushroomsTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-mushroom-outer`;
+  const panelId = `${cardId}-mushroom-panel`;
+  const sceneClip = `${cardId}-mushroom-clip`;
+  const outerPath = roundedRectPath(1.1, 1.1, width - 2.2, height - 2.2, 5.3);
+  const panelPath = roundedRectPath(
+    layout.x - 0.46,
+    layout.y - 0.46,
+    layout.width + 0.92,
+    layout.height + 0.92,
+    Math.max(2.4, layout.rx - 0.2),
+  );
+  const skyTop = enrichColor(mixColors(palette.paper, "#fff9ee", 0.16), {
+    saturationMult: 0.96,
+    lightnessShift: 0.03,
+  });
+  const skyBottom = enrichColor(mixColors(palette.soft, palette.paper, 0.14), {
+    hueShift: -8 + seeded(seed, 7210) * 16,
+    saturationMult: 0.92,
+    lightnessShift: 0.04,
+  });
+  const hillFar = enrichColor(mixColors(palette.soft, palette.border, 0.42), {
+    hueShift: -18 + seeded(seed, 7220) * 32,
+    saturationMult: 0.92,
+    lightnessShift: -0.04,
+  });
+  const hillNear = enrichColor(mixColors(palette.accent, palette.soft, 0.3), {
+    hueShift: 16 + seeded(seed, 7230) * 20,
+    saturationMult: 0.96,
+    lightnessShift: -0.06,
+  });
+  const soil = enrichColor(mixColors(palette.border, palette.pop, 0.26), {
+    hueShift: 10 + seeded(seed, 7240) * 14,
+    saturationMult: 1.02,
+    lightnessShift: -0.14,
+  });
+  const farTrunk = enrichColor(mixColors(palette.border, palette.soft, 0.5), {
+    hueShift: -10 + seeded(seed, 7245) * 20,
+    saturationMult: 0.82,
+    lightnessShift: -0.02,
+  });
+  const midTrunk = enrichColor(mixColors(palette.border, palette.pop, 0.42), {
+    hueShift: 6 + seeded(seed, 7246) * 18,
+    saturationMult: 0.92,
+    lightnessShift: -0.08,
+  });
+  const caps = [
+    enrichColor(mixColors("#ffbf84", palette.pop, 0.12), { saturationMult: 1.18, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#f0a6cf", palette.accent, 0.18), { saturationMult: 1.2, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#d8b5f2", palette.soft, 0.18), { saturationMult: 1.16, lightnessShift: 0.01 }),
+    enrichColor(mixColors("#9fd8c9", palette.soft, 0.2), { saturationMult: 1.08, lightnessShift: -0.02 }),
+  ];
+  const stem = mixColors("#fff7ee", palette.paper, 0.08);
+  const dots = mixColors("#fffdf8", palette.paper, 0.02);
+  const mushrooms = Array.from({ length: 9 }).map((_, index) => {
+    const scale = 0.72 + seeded(seed, 7250 + index) * 0.58;
+    return {
+      x: width * (0.08 + index * 0.1 + seeded(seed, 7260 + index) * 0.03),
+      y: height * (0.8 + seeded(seed, 7270 + index) * 0.08),
+      scale,
+      cap: caps[index % caps.length],
+      lean: seeded(seed, 7280 + index) * 18 - 9,
+    };
+  });
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={skyTop} />
+          <stop offset="100%" stopColor={skyBottom} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.24)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.18)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.14" transform="translate(0.68 0.88)" />
+      <g clipPath={`url(#${sceneClip})`}>
+        <rect x="0" y="0" width={width} height={height} fill={`url(#${outerId})`} />
+        {Array.from({ length: 8 }).map((_, index) => {
+          const trunkWidth = width * (0.018 + seeded(seed, 7247 + index) * 0.016);
+          const trunkHeight = height * (0.56 + seeded(seed, 7257 + index) * 0.18);
+          const x = width * (0.04 + index * 0.12 + seeded(seed, 7267 + index) * 0.04);
+          const y = height * (0.14 + seeded(seed, 7277 + index) * 0.05);
+          return (
+            <g key={`mushroom-far-trunk-${index}`} opacity={0.18 + seeded(seed, 7287 + index) * 0.12}>
+              <rect
+                x={x}
+                y={y}
+                width={trunkWidth}
+                height={trunkHeight}
+                rx={trunkWidth * 0.45}
+                fill={farTrunk}
+              />
+              <path
+                d={`M ${x + trunkWidth * 0.52} ${y + trunkHeight * (0.22 + seeded(seed, 7297 + index) * 0.12)} C ${x + trunkWidth * 1.2} ${y + trunkHeight * (0.18 + seeded(seed, 7307 + index) * 0.12)}, ${x + trunkWidth * 1.46} ${y + trunkHeight * (0.12 + seeded(seed, 7317 + index) * 0.12)}, ${x + trunkWidth * 1.78} ${y + trunkHeight * (0.08 + seeded(seed, 7327 + index) * 0.12)}`}
+                fill="none"
+                stroke={mixColors(farTrunk, palette.paper, 0.14)}
+                strokeWidth={trunkWidth * 0.14}
+                strokeLinecap="round"
+              />
+            </g>
+          );
+        })}
+        {Array.from({ length: 6 }).map((_, index) => {
+          const trunkWidth = width * (0.024 + seeded(seed, 7337 + index) * 0.018);
+          const trunkHeight = height * (0.48 + seeded(seed, 7347 + index) * 0.18);
+          const x = width * (0.08 + index * 0.15 + seeded(seed, 7357 + index) * 0.05);
+          const y = height * (0.24 + seeded(seed, 7367 + index) * 0.06);
+          return (
+            <g key={`mushroom-mid-trunk-${index}`} opacity={0.26 + seeded(seed, 7377 + index) * 0.14}>
+              <rect
+                x={x}
+                y={y}
+                width={trunkWidth}
+                height={trunkHeight}
+                rx={trunkWidth * 0.46}
+                fill={midTrunk}
+              />
+              <path
+                d={`M ${x + trunkWidth * 0.5} ${y + trunkHeight * (0.36 + seeded(seed, 7387 + index) * 0.16)} C ${x + trunkWidth * 1.24} ${y + trunkHeight * (0.34 + seeded(seed, 7397 + index) * 0.12)}, ${x + trunkWidth * 1.6} ${y + trunkHeight * (0.28 + seeded(seed, 7407 + index) * 0.12)}, ${x + trunkWidth * 1.94} ${y + trunkHeight * (0.22 + seeded(seed, 7417 + index) * 0.12)}`}
+                fill="none"
+                stroke={mixColors(midTrunk, palette.paper, 0.16)}
+                strokeWidth={trunkWidth * 0.13}
+                strokeLinecap="round"
+              />
+            </g>
+          );
+        })}
+        <path d={rollingHillPath(width, height, height * 0.74, height * 0.08, seed, 7290)} fill={hillFar} opacity="0.74" />
+        <path d={rollingHillPath(width, height, height * 0.86, height * 0.06, seed, 7300)} fill={hillNear} opacity="0.88" />
+        <path d={`M 0 ${height * 0.9} C ${width * 0.18} ${height * 0.85}, ${width * 0.36} ${height * 0.95}, ${width * 0.54} ${height * 0.9} C ${width * 0.72} ${height * 0.84}, ${width * 0.9} ${height * 0.95}, ${width} ${height * 0.9} V ${height} H 0 Z`} fill={soil} opacity="0.86" />
+
+        {Array.from({ length: 12 }).map((_, index) => (
+          <path
+            key={`mushroom-grass-${index}`}
+            d={`M ${width * (0.06 + seeded(seed, 7310 + index) * 0.88)} ${height * (0.89 + seeded(seed, 7320 + index) * 0.06)} C ${width * (0.08 + seeded(seed, 7330 + index) * 0.84)} ${height * (0.77 + seeded(seed, 7340 + index) * 0.06)}, ${width * (0.09 + seeded(seed, 7350 + index) * 0.82)} ${height * (0.73 + seeded(seed, 7360 + index) * 0.08)}, ${width * (0.08 + seeded(seed, 7370 + index) * 0.84)} ${height * (0.69 + seeded(seed, 7380 + index) * 0.08)}`}
+            fill="none"
+            stroke={mixColors(palette.soft, palette.border, 0.34)}
+            strokeWidth={0.14 + seeded(seed, 7390 + index) * 0.08}
+            strokeLinecap="round"
+            opacity="0.52"
+          />
+        ))}
+
+        {mushrooms.map((mushroom, index) => {
+          const capWidth = 3.4 * mushroom.scale;
+          const capHeight = 1.7 * mushroom.scale;
+          const stemHeight = 2.1 * mushroom.scale;
+          const stemWidth = 0.9 * mushroom.scale;
+          return (
+            <g key={`mushroom-${index}`} transform={`translate(${mushroom.x} ${mushroom.y}) rotate(${mushroom.lean})`}>
+              <rect
+                x={-stemWidth * 0.5}
+                y={-stemHeight}
+                width={stemWidth}
+                height={stemHeight}
+                rx={stemWidth * 0.42}
+                fill={stem}
+                opacity="0.96"
+              />
+              <path
+                d={`M ${-capWidth} ${-stemHeight + capHeight * 0.9} C ${-capWidth * 0.8} ${-stemHeight - capHeight * 0.92}, ${capWidth * 0.8} ${-stemHeight - capHeight * 0.92}, ${capWidth} ${-stemHeight + capHeight * 0.9} Q 0 ${-stemHeight + capHeight * 0.48} ${-capWidth} ${-stemHeight + capHeight * 0.9} Z`}
+                fill={mushroom.cap}
+              />
+              <ellipse cx="0" cy={-stemHeight + capHeight * 0.84} rx={capWidth * 0.78} ry={capHeight * 0.34} fill={mixColors(mushroom.cap, stem, 0.44)} opacity="0.82" />
+              {Array.from({ length: 4 }).map((__, dotIndex) => (
+                <circle
+                  key={`mushroom-dot-${index}-${dotIndex}`}
+                  cx={-capWidth * 0.45 + dotIndex * (capWidth * 0.3) + seeded(seed, 7400 + index * 7 + dotIndex) * 0.22}
+                  cy={-stemHeight - capHeight * 0.26 + seeded(seed, 7410 + index * 7 + dotIndex) * 0.46}
+                  r={0.16 * mushroom.scale + seeded(seed, 7420 + index * 7 + dotIndex) * 0.08}
+                  fill={dots}
+                  opacity="0.86"
+                />
+              ))}
+            </g>
+          );
+        })}
+
+        {Array.from({ length: 16 }).map((_, index) =>
+          index % 3 === 0 ? (
+            <path
+              key={`mushroom-sparkle-${index}`}
+              d={sparklePath(
+                width * (0.08 + seeded(seed, 7430 + index) * 0.84),
+                height * (0.08 + seeded(seed, 7440 + index) * 0.34),
+                0.22 + seeded(seed, 7450 + index) * 0.24,
+                0.08 + seeded(seed, 7460 + index) * 0.1,
+              )}
+              fill={mixColors("#fff8e9", palette.paper, 0.06)}
+              opacity="0.7"
+            />
+          ) : (
+            <circle
+              key={`mushroom-dot-air-${index}`}
+              cx={width * (0.08 + seeded(seed, 7430 + index) * 0.84)}
+              cy={height * (0.08 + seeded(seed, 7440 + index) * 0.34)}
+              r={0.14 + seeded(seed, 7450 + index) * 0.12}
+              fill={index % 2 === 0 ? mixColors(palette.pop, palette.paper, 0.18) : mixColors(palette.accent, palette.paper, 0.14)}
+              opacity="0.48"
+            />
+          ),
+        )}
+      </g>
+      <path d={outerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
+      <path d={roundedRectPath(4.1, 4.1, width - 8.2, height - 8.2, 4.5)} fill="none" stroke={mixColors(palette.border, palette.paper, 0.24)} strokeWidth="0.66" opacity="0.74" />
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.06" transform="translate(0.4 0.52)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.48" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.42)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.74" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
+function RibbonsTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-ribbons-outer`;
+  const panelId = `${cardId}-ribbons-panel`;
+  const sceneClip = `${cardId}-ribbons-clip`;
+  const outerPath = roundedRectPath(1.15, 1.15, width - 2.3, height - 2.3, 5.3);
+  const innerPath = roundedRectPath(4.2, 4.2, width - 8.4, height - 8.4, 4.4);
+  const panelPath = roundedRectPath(
+    layout.x - 0.44,
+    layout.y - 0.44,
+    layout.width + 0.88,
+    layout.height + 0.88,
+    Math.max(2.4, layout.rx - 0.18),
+  );
+  const ribbonColors = [
+    enrichColor(mixColors("#ffa2bf", palette.accent, 0.08), { saturationMult: 1.24, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#f9d783", palette.pop, 0.08), { saturationMult: 1.18, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#9fe0dc", palette.soft, 0.12), { saturationMult: 1.08, lightnessShift: -0.01 }),
+    enrichColor(mixColors("#d7b8fb", palette.soft, 0.16), { saturationMult: 1.14, lightnessShift: 0.02 }),
+  ];
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.2)} />
+          <stop offset="100%" stopColor={mixColors(palette.soft, palette.paper, 0.16)} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.22)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.18)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.12" transform="translate(0.68 0.86)" />
+      <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
+      <g clipPath={`url(#${sceneClip})`}>
+        {Array.from({ length: 10 }).map((_, index) => {
+          const startY = height * (0.14 + index * 0.07 + seeded(seed, 7500 + index) * 0.03);
+          const stroke = ribbonColors[index % ribbonColors.length] ?? palette.accent;
+          return (
+            <path
+              key={`ribbon-${index}`}
+              d={`M ${-width * 0.02} ${startY} C ${width * 0.16} ${startY - height * (0.12 + seeded(seed, 7510 + index) * 0.04)}, ${width * 0.34} ${startY + height * (0.12 + seeded(seed, 7520 + index) * 0.05)}, ${width * 0.5} ${startY} C ${width * 0.66} ${startY - height * (0.12 + seeded(seed, 7530 + index) * 0.04)}, ${width * 0.84} ${startY + height * (0.12 + seeded(seed, 7540 + index) * 0.05)}, ${width * 1.02} ${startY}`}
+              fill="none"
+              stroke={stroke}
+              strokeWidth={0.36 + seeded(seed, 7550 + index) * 0.24}
+              strokeLinecap="round"
+              opacity={0.7 + seeded(seed, 7560 + index) * 0.18}
+            />
+          );
+        })}
+
+        {Array.from({ length: 6 }).map((_, index) => {
+          const x = width * (0.12 + seeded(seed, 7570 + index) * 0.76);
+          const y = height * (0.18 + seeded(seed, 7580 + index) * 0.6);
+          const scale = 0.56 + seeded(seed, 7590 + index) * 0.4;
+          const color = ribbonColors[(index + 1) % ribbonColors.length] ?? palette.accent;
+          return (
+            <g key={`bow-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7600 + index) * 24 - 12})`}>
+              <ellipse cx="-0.92" cy="0" rx="1.1" ry="0.7" fill={color} transform="rotate(-18 -0.92 0)" />
+              <ellipse cx="0.92" cy="0" rx="1.1" ry="0.7" fill={mixColors(color, palette.paper, 0.06)} transform="rotate(18 0.92 0)" />
+              <rect x={-0.24} y={-0.44} width={0.48} height={0.88} rx={0.18} fill={mixColors(palette.border, color, 0.28)} />
+              <path d="M -0.22 0.32 L -0.72 1.46 L -0.08 0.94 Z" fill={mixColors(color, palette.pop, 0.2)} />
+              <path d="M 0.22 0.32 L 0.72 1.46 L 0.08 0.94 Z" fill={mixColors(color, palette.paper, 0.08)} />
+            </g>
+          );
+        })}
+
+        {Array.from({ length: 18 }).map((_, index) => (
+          index % 4 === 0 ? (
+            <path
+              key={`ribbon-star-${index}`}
+              d={sparklePath(
+                width * (0.08 + seeded(seed, 7610 + index) * 0.84),
+                height * (0.08 + seeded(seed, 7620 + index) * 0.76),
+                0.2 + seeded(seed, 7630 + index) * 0.18,
+                0.08 + seeded(seed, 7640 + index) * 0.08,
+              )}
+              fill={mixColors("#fff7ec", palette.pop, 0.1)}
+              opacity="0.74"
+            />
+          ) : (
+            <circle
+              key={`ribbon-dot-${index}`}
+              cx={width * (0.08 + seeded(seed, 7610 + index) * 0.84)}
+              cy={height * (0.08 + seeded(seed, 7620 + index) * 0.76)}
+              r={0.13 + seeded(seed, 7630 + index) * 0.14}
+              fill={index % 2 === 0 ? palette.pop : palette.accent}
+              opacity="0.5"
+            />
+          )
+        ))}
+      </g>
+      <path d={innerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.64" opacity="0.72" />
+
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.06" transform="translate(0.4 0.5)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.48" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.4)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.72" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
+function FruitsTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-fruits-outer`;
+  const panelId = `${cardId}-fruits-panel`;
+  const sceneClip = `${cardId}-fruits-clip`;
+  const outerPath = roundedRectPath(1.15, 1.15, width - 2.3, height - 2.3, 5.3);
+  const innerPath = roundedRectPath(4.15, 4.15, width - 8.3, height - 8.3, 4.4);
+  const panelPath = roundedRectPath(
+    layout.x - 0.44,
+    layout.y - 0.44,
+    layout.width + 0.88,
+    layout.height + 0.88,
+    Math.max(2.4, layout.rx - 0.18),
+  );
+  const fruitPalette = [
+    enrichColor(mixColors("#ff8da8", palette.accent, 0.06), { saturationMult: 1.28, lightnessShift: 0.03 }),
+    enrichColor(mixColors("#ffc577", palette.pop, 0.08), { saturationMult: 1.22, lightnessShift: 0.04 }),
+    enrichColor(mixColors("#9fe1bf", palette.soft, 0.12), { saturationMult: 1.1, lightnessShift: -0.02 }),
+    enrichColor(mixColors("#caa7ef", palette.soft, 0.18), { saturationMult: 1.18, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#ffb784", palette.pop, 0.16), { saturationMult: 1.18, lightnessShift: 0.02 }),
+  ];
+  const leaf = enrichColor(mixColors("#9dd4a4", palette.soft, 0.16), {
+    saturationMult: 1.08,
+    lightnessShift: -0.04,
+  });
+  const stem = mixColors("#8b7a60", palette.border, 0.2);
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#fffdf8", 0.08)} />
+          <stop offset="100%" stopColor={mixColors(palette.soft, palette.paper, 0.16)} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.22)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.18)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.12" transform="translate(0.68 0.86)" />
+      <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
+      <g clipPath={`url(#${sceneClip})`}>
+        {Array.from({ length: 10 }).map((_, index) => {
+          const x = width * (0.08 + seeded(seed, 7800 + index) * 0.84);
+          const y = height * (0.12 + seeded(seed, 7810 + index) * 0.72);
+          const scale = 0.56 + seeded(seed, 7820 + index) * 0.6;
+          const color = fruitPalette[index % fruitPalette.length] ?? palette.accent;
+          const kind = index % 4;
+
+          if (kind === 0) {
+            return (
+              <g key={`fruit-apple-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7830 + index) * 16 - 8})`} opacity={0.78}>
+                <circle cx="-0.56" cy="0" r="0.9" fill={color} />
+                <circle cx="0.56" cy="0" r="0.9" fill={mixColors(color, palette.paper, 0.04)} />
+                <path d="M -0.92 0.2 Q 0 1.34 0.92 0.2" fill={mixColors(color, palette.paper, 0.1)} opacity="0.86" />
+                <path d="M 0 -0.94 Q 0.12 -1.58 0.64 -1.9" fill="none" stroke={stem} strokeWidth="0.12" strokeLinecap="round" />
+                <ellipse cx="0.84" cy="-1.66" rx="0.54" ry="0.26" fill={leaf} transform="rotate(20 0.84 -1.66)" />
+              </g>
+            );
+          }
+
+          if (kind === 1) {
+            return (
+              <g key={`fruit-cherry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7840 + index) * 14 - 7})`} opacity={0.76}>
+                <circle cx="-0.48" cy="0.36" r="0.62" fill={color} />
+                <circle cx="0.52" cy="0.18" r="0.62" fill={mixColors(color, palette.pop, 0.12)} />
+                <path d="M -0.48 0.02 Q -0.3 -1.18 0.22 -1.72" fill="none" stroke={stem} strokeWidth="0.11" strokeLinecap="round" />
+                <path d="M 0.52 -0.16 Q 0.44 -1.26 0.1 -1.78" fill="none" stroke={stem} strokeWidth="0.11" strokeLinecap="round" />
+                <ellipse cx="0.34" cy="-1.78" rx="0.48" ry="0.22" fill={leaf} transform="rotate(-14 0.34 -1.78)" />
+              </g>
+            );
+          }
+
+          if (kind === 2) {
+            return (
+              <g key={`fruit-strawberry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7850 + index) * 18 - 9})`} opacity={0.78}>
+                <path d="M 0 -1.24 C 1.08 -1.08 1.22 0.16 0.86 0.98 C 0.48 1.76 -0.48 1.76 -0.86 0.98 C -1.22 0.16 -1.08 -1.08 0 -1.24 Z" fill={color} />
+                <path d="M -0.92 -1.06 Q -0.4 -1.66 0 -1.42 Q 0.4 -1.66 0.92 -1.06" fill={leaf} />
+                {Array.from({ length: 4 }).map((__, dotIndex) => (
+                  <circle key={`fruit-seed-${index}-${dotIndex}`} cx={-0.36 + dotIndex * 0.24} cy={-0.2 + (dotIndex % 2) * 0.44} r="0.07" fill={mixColors("#fff4da", palette.paper, 0.08)} />
+                ))}
+              </g>
+            );
+          }
+
+          return (
+            <g key={`fruit-citrus-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7860 + index) * 18 - 9})`} opacity={0.74}>
+              <circle cx="0" cy="0" r="0.96" fill={color} />
+              <path d="M -0.7 -0.08 L 0.7 -0.08 M -0.6 0.36 L 0.6 0.36" stroke={mixColors("#fff8e8", palette.paper, 0.08)} strokeWidth="0.08" opacity="0.82" />
+              <ellipse cx="0.52" cy="-1.08" rx="0.42" ry="0.2" fill={leaf} transform="rotate(26 0.52 -1.08)" />
+            </g>
+          );
+        })}
+
+        {Array.from({ length: 20 }).map((_, index) => (
+          index % 5 === 0 ? (
+            <path
+              key={`fruit-heart-${index}`}
+              d={heartPath(
+                width * (0.08 + seeded(seed, 7870 + index) * 0.84),
+                height * (0.12 + seeded(seed, 7880 + index) * 0.72),
+                0.34 + seeded(seed, 7890 + index) * 0.16,
+              )}
+              fill={mixColors("#ffd9e2", palette.accent, 0.12)}
+              opacity="0.26"
+            />
+          ) : (
+            <circle
+              key={`fruit-dot-${index}`}
+              cx={width * (0.08 + seeded(seed, 7870 + index) * 0.84)}
+              cy={height * (0.12 + seeded(seed, 7880 + index) * 0.72)}
+              r={0.12 + seeded(seed, 7890 + index) * 0.12}
+              fill={index % 2 === 0 ? palette.pop : palette.accent}
+              opacity="0.34"
+            />
+          )
+        ))}
+      </g>
+      <path d={innerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.64" opacity="0.72" />
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.06" transform="translate(0.4 0.5)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.48" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.4)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.72" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
+function KawaiiCloudsTheme(props: {
+  width: number;
+  height: number;
+  palette: Palette;
+  layout: QuestionLayout;
+  clipId: string;
+  lines: string[];
+  seed: number;
+  cardId: string;
+}) {
+  const { width, height, palette, layout, clipId, lines, seed, cardId } = props;
+  const outerId = `${cardId}-clouds-outer`;
+  const panelId = `${cardId}-clouds-panel`;
+  const sceneClip = `${cardId}-clouds-clip`;
+  const outerPath = roundedRectPath(1.15, 1.15, width - 2.3, height - 2.3, 5.3);
+  const innerPath = roundedRectPath(4.15, 4.15, width - 8.3, height - 8.3, 4.4);
+  const panelPath = roundedRectPath(
+    layout.x - 0.44,
+    layout.y - 0.44,
+    layout.width + 0.88,
+    layout.height + 0.88,
+    Math.max(2.4, layout.rx - 0.18),
+  );
+  const skyTop = enrichColor(mixColors("#e9f7ff", palette.soft, 0.24), {
+    saturationMult: 1.02,
+    lightnessShift: 0.06,
+  });
+  const skyBottom = enrichColor(mixColors("#fff3fb", palette.paper, 0.12), {
+    hueShift: -8 + seeded(seed, 7900) * 16,
+    saturationMult: 1.04,
+    lightnessShift: 0.04,
+  });
+  const cloudFill = mixColors("#ffffff", palette.paper, 0.02);
+  const cloudShade = mixColors(palette.soft, palette.paper, 0.1);
+  const blush = mixColors("#ffc5d9", palette.accent, 0.08);
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={outerId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={skyTop} />
+          <stop offset="100%" stopColor={skyBottom} />
+        </linearGradient>
+        <linearGradient id={panelId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={mixColors(palette.paper, "#ffffff", 0.22)} />
+          <stop offset="100%" stopColor={mixColors(palette.paper, palette.soft, 0.18)} />
+        </linearGradient>
+        <clipPath id={sceneClip}>
+          <path d={outerPath} />
+        </clipPath>
+      </defs>
+
+      <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.12" transform="translate(0.68 0.86)" />
+      <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
+      <g clipPath={`url(#${sceneClip})`}>
+        {Array.from({ length: 8 }).map((_, index) => {
+          const x = width * (0.06 + seeded(seed, 7910 + index) * 0.82);
+          const y = height * (0.16 + seeded(seed, 7920 + index) * 0.58);
+          const scale = 0.58 + seeded(seed, 7930 + index) * 0.54;
+          return (
+            <g key={`cloud-${index}`} transform={`translate(${x} ${y}) scale(${scale})`} opacity={0.82 - (index % 3) * 0.08}>
+              <path d={cloudPath(-2.8, -1.8, 5.8, 3.8)} fill={cloudFill} />
+              <path d={cloudPath(-2.8, -1.68, 5.8, 3.6)} fill={cloudShade} opacity="0.24" />
+              {index % 2 === 0 ? (
+                <>
+                  <circle cx="-0.6" cy="-0.2" r="0.09" fill={mixColors(palette.ink, palette.paper, 0.06)} />
+                  <circle cx="0.58" cy="-0.2" r="0.09" fill={mixColors(palette.ink, palette.paper, 0.06)} />
+                  <path d="M -0.42 0.28 Q 0 0.58 0.42 0.28" fill="none" stroke={mixColors(palette.border, palette.paper, 0.08)} strokeWidth="0.08" strokeLinecap="round" />
+                  <circle cx="-1.02" cy="0.12" r="0.16" fill={blush} opacity="0.76" />
+                  <circle cx="1.02" cy="0.12" r="0.16" fill={blush} opacity="0.76" />
+                </>
+              ) : null}
+            </g>
+          );
+        })}
+
+        {Array.from({ length: 14 }).map((_, index) => (
+          index % 4 === 0 ? (
+            <path
+              key={`cloud-star-${index}`}
+              d={sparklePath(
+                width * (0.08 + seeded(seed, 7940 + index) * 0.84),
+                height * (0.08 + seeded(seed, 7950 + index) * 0.78),
+                0.22 + seeded(seed, 7960 + index) * 0.22,
+                0.08 + seeded(seed, 7970 + index) * 0.08,
+              )}
+              fill={mixColors("#fff5c8", palette.pop, 0.1)}
+              opacity="0.78"
+            />
+          ) : (
+            <circle
+              key={`cloud-dot-${index}`}
+              cx={width * (0.08 + seeded(seed, 7940 + index) * 0.84)}
+              cy={height * (0.08 + seeded(seed, 7950 + index) * 0.78)}
+              r={0.12 + seeded(seed, 7960 + index) * 0.12}
+              fill={index % 2 === 0 ? palette.pop : palette.accent}
+              opacity="0.42"
+            />
+          )
+        ))}
+
+        {Array.from({ length: 6 }).map((_, index) => (
+          <path
+            key={`cloud-rainbow-${index}`}
+            d={`M ${width * (0.08 + seeded(seed, 7980 + index) * 0.84)} ${height * (0.28 + seeded(seed, 7990 + index) * 0.42)} q ${1.2 + seeded(seed, 8000 + index) * 0.8} ${1 + seeded(seed, 8010 + index) * 0.4} ${2.4 + seeded(seed, 8020 + index) * 0.9} 0`}
+            fill="none"
+            stroke={index % 2 === 0 ? mixColors(palette.accent, palette.paper, 0.12) : mixColors(palette.soft, palette.paper, 0.12)}
+            strokeWidth="0.18"
+            strokeLinecap="round"
+            opacity="0.48"
+          />
+        ))}
+      </g>
+      <path d={innerPath} fill="none" stroke={mixColors(palette.border, palette.paper, 0.22)} strokeWidth="0.64" opacity="0.72" />
+      <path d={panelPath} fill={mixColors(palette.border, palette.paper, 0.92)} opacity="0.06" transform="translate(0.4 0.5)" />
+      <path d={panelPath} fill={`url(#${panelId})`} fillOpacity="0.84" stroke={mixColors(palette.border, palette.paper, 0.2)} strokeWidth="0.48" />
+      <path d={panelPath} fill="none" stroke={mixColors("#ffffff", palette.paper, 0.4)} strokeWidth="0.18" transform="translate(0 0.22)" opacity="0.72" />
+      <QuestionText clipId={clipId} layout={layout} ink={mixColors(palette.ink, palette.paper, 0.18)} lines={lines} />
+    </g>
+  );
+}
+
 function BowsTheme(props: {
   width: number;
   height: number;
@@ -4919,6 +5531,14 @@ function renderThemeArt(props: {
       return <CloudMailTheme {...props} />;
     case "forest-cabin":
       return <ForestCabinTheme {...props} />;
+    case "mushrooms":
+      return <MushroomsTheme {...props} />;
+    case "ribbons":
+      return <RibbonsTheme {...props} />;
+    case "fruits":
+      return <FruitsTheme {...props} />;
+    case "kawaii-clouds":
+      return <KawaiiCloudsTheme {...props} />;
     case "sunny-kitchen":
       return <SunnyKitchenTheme {...props} />;
     case "desk-treasures":

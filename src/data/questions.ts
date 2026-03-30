@@ -177,7 +177,7 @@ export const QUESTION_BANK: Question[] = [
   question("body-signal-today", "body", "¿Qué señal te dio tu cuerpo hoy que no quieres ignorar?", "What signal did your body give you today that you do not want to ignore?"),
   question("body-fatigue-today", "body", "¿Dónde sentiste el cansancio en tu cuerpo hoy?", "Where did you feel tiredness in your body today?"),
   question("body-lightness-today", "body", "¿Cuándo se sintió tu cuerpo más liviano hoy?", "When did your body feel lightest today?"),
-  question("body-breath-today", "body", "¿Qué cambió en tu respiración a lo largo del día?", "What changed in your breathing over the course of the day?"),
+  question("body-breath-today", "body", "¿Qué alteró tu respiración en el día de hoy?", "What altered your breathing today?"),
   question("body-safe-recently", "body", "¿Cuándo fue la última vez que tu cuerpo se sintió a salvo?", "When was the last time your body felt safe?"),
   question("body-comfort-today", "body", "¿Qué postura, prenda o rincón te dio más comodidad hoy?", "What posture, piece of clothing, or corner gave you the most comfort today?"),
   question("body-touch-tonight", "body", "¿Qué tipo de cuidado o contacto agradecería tu cuerpo esta noche?", "What kind of care or touch would your body appreciate tonight?"),
