@@ -5159,11 +5159,11 @@ function FruitsTheme(props: {
     Math.max(2.4, layout.rx - 0.18),
   );
   const fruitPalette = [
-    enrichColor(mixColors("#ff8da8", palette.accent, 0.06), { saturationMult: 1.28, lightnessShift: 0.03 }),
-    enrichColor(mixColors("#ffc577", palette.pop, 0.08), { saturationMult: 1.22, lightnessShift: 0.04 }),
-    enrichColor(mixColors("#9fe1bf", palette.soft, 0.12), { saturationMult: 1.1, lightnessShift: -0.02 }),
-    enrichColor(mixColors("#caa7ef", palette.soft, 0.18), { saturationMult: 1.18, lightnessShift: 0.02 }),
-    enrichColor(mixColors("#ffb784", palette.pop, 0.16), { saturationMult: 1.18, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#ff8da8", palette.accent, 0.04), { saturationMult: 1.42, lightnessShift: 0.01 }),
+    enrichColor(mixColors("#ffc577", palette.pop, 0.04), { saturationMult: 1.34, lightnessShift: 0.02 }),
+    enrichColor(mixColors("#9fe1bf", palette.soft, 0.08), { saturationMult: 1.18, lightnessShift: -0.04 }),
+    enrichColor(mixColors("#caa7ef", palette.soft, 0.12), { saturationMult: 1.28, lightnessShift: 0.01 }),
+    enrichColor(mixColors("#ffb784", palette.pop, 0.1), { saturationMult: 1.28, lightnessShift: 0.01 }),
   ];
   const leaf = enrichColor(mixColors("#9dd4a4", palette.soft, 0.16), {
     saturationMult: 1.08,
@@ -5190,41 +5190,46 @@ function FruitsTheme(props: {
       <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.12" transform="translate(0.68 0.86)" />
       <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
       <g clipPath={`url(#${sceneClip})`}>
-        {Array.from({ length: 10 }).map((_, index) => {
+        {Array.from({ length: 42 }).map((_, index) => {
           const x = width * (0.08 + seeded(seed, 7800 + index) * 0.84);
           const y = height * (0.12 + seeded(seed, 7810 + index) * 0.72);
-          const scale = 0.56 + seeded(seed, 7820 + index) * 0.6;
+          const scale = 0.52 + seeded(seed, 7820 + index) * 1.18;
           const color = fruitPalette[index % fruitPalette.length] ?? palette.accent;
           const kind = index % 4;
+          const outline = mixColors(palette.border, color, 0.22);
 
           if (kind === 0) {
             return (
-              <g key={`fruit-apple-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7830 + index) * 16 - 8})`} opacity={0.78}>
+              <g key={`fruit-apple-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7830 + index) * 16 - 8})`} opacity={0.86}>
                 <circle cx="-0.56" cy="0" r="0.9" fill={color} />
                 <circle cx="0.56" cy="0" r="0.9" fill={mixColors(color, palette.paper, 0.04)} />
                 <path d="M -0.92 0.2 Q 0 1.34 0.92 0.2" fill={mixColors(color, palette.paper, 0.1)} opacity="0.86" />
                 <path d="M 0 -0.94 Q 0.12 -1.58 0.64 -1.9" fill="none" stroke={stem} strokeWidth="0.12" strokeLinecap="round" />
                 <ellipse cx="0.84" cy="-1.66" rx="0.54" ry="0.26" fill={leaf} transform="rotate(20 0.84 -1.66)" />
+                <circle cx="-0.56" cy="0" r="0.9" fill="none" stroke={outline} strokeWidth="0.06" opacity="0.48" />
+                <circle cx="0.56" cy="0" r="0.9" fill="none" stroke={outline} strokeWidth="0.06" opacity="0.48" />
               </g>
             );
           }
 
           if (kind === 1) {
             return (
-              <g key={`fruit-cherry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7840 + index) * 14 - 7})`} opacity={0.76}>
+              <g key={`fruit-cherry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7840 + index) * 14 - 7})`} opacity={0.84}>
                 <circle cx="-0.48" cy="0.36" r="0.62" fill={color} />
                 <circle cx="0.52" cy="0.18" r="0.62" fill={mixColors(color, palette.pop, 0.12)} />
                 <path d="M -0.48 0.02 Q -0.3 -1.18 0.22 -1.72" fill="none" stroke={stem} strokeWidth="0.11" strokeLinecap="round" />
                 <path d="M 0.52 -0.16 Q 0.44 -1.26 0.1 -1.78" fill="none" stroke={stem} strokeWidth="0.11" strokeLinecap="round" />
                 <ellipse cx="0.34" cy="-1.78" rx="0.48" ry="0.22" fill={leaf} transform="rotate(-14 0.34 -1.78)" />
+                <circle cx="-0.48" cy="0.36" r="0.62" fill="none" stroke={outline} strokeWidth="0.06" opacity="0.44" />
+                <circle cx="0.52" cy="0.18" r="0.62" fill="none" stroke={outline} strokeWidth="0.06" opacity="0.44" />
               </g>
             );
           }
 
           if (kind === 2) {
             return (
-              <g key={`fruit-strawberry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7850 + index) * 18 - 9})`} opacity={0.78}>
-                <path d="M 0 -1.24 C 1.08 -1.08 1.22 0.16 0.86 0.98 C 0.48 1.76 -0.48 1.76 -0.86 0.98 C -1.22 0.16 -1.08 -1.08 0 -1.24 Z" fill={color} />
+              <g key={`fruit-strawberry-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7850 + index) * 18 - 9})`} opacity={0.86}>
+                <path d="M 0 -1.24 C 1.08 -1.08 1.22 0.16 0.86 0.98 C 0.48 1.76 -0.48 1.76 -0.86 0.98 C -1.22 0.16 -1.08 -1.08 0 -1.24 Z" fill={color} stroke={outline} strokeWidth="0.06" />
                 <path d="M -0.92 -1.06 Q -0.4 -1.66 0 -1.42 Q 0.4 -1.66 0.92 -1.06" fill={leaf} />
                 {Array.from({ length: 4 }).map((__, dotIndex) => (
                   <circle key={`fruit-seed-${index}-${dotIndex}`} cx={-0.36 + dotIndex * 0.24} cy={-0.2 + (dotIndex % 2) * 0.44} r="0.07" fill={mixColors("#fff4da", palette.paper, 0.08)} />
@@ -5234,8 +5239,8 @@ function FruitsTheme(props: {
           }
 
           return (
-            <g key={`fruit-citrus-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7860 + index) * 18 - 9})`} opacity={0.74}>
-              <circle cx="0" cy="0" r="0.96" fill={color} />
+            <g key={`fruit-citrus-${index}`} transform={`translate(${x} ${y}) scale(${scale}) rotate(${seeded(seed, 7860 + index) * 18 - 9})`} opacity={0.82}>
+              <circle cx="0" cy="0" r="0.96" fill={color} stroke={outline} strokeWidth="0.06" />
               <path d="M -0.7 -0.08 L 0.7 -0.08 M -0.6 0.36 L 0.6 0.36" stroke={mixColors("#fff8e8", palette.paper, 0.08)} strokeWidth="0.08" opacity="0.82" />
               <ellipse cx="0.52" cy="-1.08" rx="0.42" ry="0.2" fill={leaf} transform="rotate(26 0.52 -1.08)" />
             </g>
@@ -5298,18 +5303,22 @@ function KawaiiCloudsTheme(props: {
     layout.height + 0.88,
     Math.max(2.4, layout.rx - 0.18),
   );
-  const skyTop = enrichColor(mixColors("#e9f7ff", palette.soft, 0.24), {
-    saturationMult: 1.02,
+  const skyTop = enrichColor(mixColors("#bfefff", palette.soft, 0.12), {
+    saturationMult: 1.14,
+    lightnessShift: 0.02,
+  });
+  const skyBottom = enrichColor(mixColors("#ffeaf8", palette.paper, 0.08), {
+    hueShift: -8 + seeded(seed, 7900) * 16,
+    saturationMult: 1.08,
+    lightnessShift: 0.02,
+  });
+  const cloudFill = mixColors("#ffffff", palette.paper, 0.01);
+  const cloudShade = mixColors("#c8e8f7", palette.soft, 0.12);
+  const cloudOutline = enrichColor(mixColors("#8ec7d5", palette.border, 0.22), {
+    saturationMult: 1.06,
     lightnessShift: 0.06,
   });
-  const skyBottom = enrichColor(mixColors("#fff3fb", palette.paper, 0.12), {
-    hueShift: -8 + seeded(seed, 7900) * 16,
-    saturationMult: 1.04,
-    lightnessShift: 0.04,
-  });
-  const cloudFill = mixColors("#ffffff", palette.paper, 0.02);
-  const cloudShade = mixColors(palette.soft, palette.paper, 0.1);
-  const blush = mixColors("#ffc5d9", palette.accent, 0.08);
+  const blush = mixColors("#ffc5d9", palette.accent, 0.04);
 
   return (
     <g>
@@ -5330,19 +5339,21 @@ function KawaiiCloudsTheme(props: {
       <path d={outerPath} fill={mixColors(palette.border, palette.soft, 0.62)} opacity="0.12" transform="translate(0.68 0.86)" />
       <path d={outerPath} fill={`url(#${outerId})`} stroke={mixColors(palette.border, palette.paper, 0.12)} strokeWidth="1.02" />
       <g clipPath={`url(#${sceneClip})`}>
-        {Array.from({ length: 8 }).map((_, index) => {
+        <circle cx={width * 0.18} cy={height * 0.16} r={height * 0.08} fill={mixColors("#fff4bc", palette.pop, 0.04)} opacity="0.92" />
+        <circle cx={width * 0.18} cy={height * 0.16} r={height * 0.13} fill={mixColors("#fff9dc", palette.paper, 0.12)} opacity="0.26" />
+        {Array.from({ length: 14 }).map((_, index) => {
           const x = width * (0.06 + seeded(seed, 7910 + index) * 0.82);
           const y = height * (0.16 + seeded(seed, 7920 + index) * 0.58);
-          const scale = 0.58 + seeded(seed, 7930 + index) * 0.54;
+          const scale = 0.88 + seeded(seed, 7930 + index) * 1.02;
           return (
-            <g key={`cloud-${index}`} transform={`translate(${x} ${y}) scale(${scale})`} opacity={0.82 - (index % 3) * 0.08}>
-              <path d={cloudPath(-2.8, -1.8, 5.8, 3.8)} fill={cloudFill} />
-              <path d={cloudPath(-2.8, -1.68, 5.8, 3.6)} fill={cloudShade} opacity="0.24" />
+            <g key={`cloud-${index}`} transform={`translate(${x} ${y}) scale(${scale})`} opacity={0.94 - (index % 3) * 0.08}>
+              <path d={cloudPath(-2.8, -1.8, 5.8, 3.8)} fill={cloudFill} stroke={cloudOutline} strokeWidth="0.12" />
+              <path d={cloudPath(-2.8, -1.68, 5.8, 3.6)} fill={cloudShade} opacity="0.34" />
               {index % 2 === 0 ? (
                 <>
-                  <circle cx="-0.6" cy="-0.2" r="0.09" fill={mixColors(palette.ink, palette.paper, 0.06)} />
-                  <circle cx="0.58" cy="-0.2" r="0.09" fill={mixColors(palette.ink, palette.paper, 0.06)} />
-                  <path d="M -0.42 0.28 Q 0 0.58 0.42 0.28" fill="none" stroke={mixColors(palette.border, palette.paper, 0.08)} strokeWidth="0.08" strokeLinecap="round" />
+                  <circle cx="-0.6" cy="-0.2" r="0.11" fill={mixColors(palette.ink, palette.paper, 0.02)} />
+                  <circle cx="0.58" cy="-0.2" r="0.11" fill={mixColors(palette.ink, palette.paper, 0.02)} />
+                  <path d="M -0.42 0.3 Q 0 0.64 0.42 0.3" fill="none" stroke={mixColors(palette.border, palette.paper, 0.02)} strokeWidth="0.1" strokeLinecap="round" />
                   <circle cx="-1.02" cy="0.12" r="0.16" fill={blush} opacity="0.76" />
                   <circle cx="1.02" cy="0.12" r="0.16" fill={blush} opacity="0.76" />
                 </>
@@ -5351,7 +5362,7 @@ function KawaiiCloudsTheme(props: {
           );
         })}
 
-        {Array.from({ length: 14 }).map((_, index) => (
+        {Array.from({ length: 18 }).map((_, index) => (
           index % 4 === 0 ? (
             <path
               key={`cloud-star-${index}`}
@@ -5376,15 +5387,15 @@ function KawaiiCloudsTheme(props: {
           )
         ))}
 
-        {Array.from({ length: 6 }).map((_, index) => (
+        {Array.from({ length: 8 }).map((_, index) => (
           <path
             key={`cloud-rainbow-${index}`}
             d={`M ${width * (0.08 + seeded(seed, 7980 + index) * 0.84)} ${height * (0.28 + seeded(seed, 7990 + index) * 0.42)} q ${1.2 + seeded(seed, 8000 + index) * 0.8} ${1 + seeded(seed, 8010 + index) * 0.4} ${2.4 + seeded(seed, 8020 + index) * 0.9} 0`}
             fill="none"
-            stroke={index % 2 === 0 ? mixColors(palette.accent, palette.paper, 0.12) : mixColors(palette.soft, palette.paper, 0.12)}
-            strokeWidth="0.18"
+            stroke={index % 2 === 0 ? mixColors(palette.accent, palette.paper, 0.06) : mixColors(palette.soft, palette.paper, 0.06)}
+            strokeWidth="0.22"
             strokeLinecap="round"
-            opacity="0.48"
+            opacity="0.56"
           />
         ))}
       </g>
