@@ -636,4 +636,87 @@ export const QUESTION_BANK: Question[] = [
   question("self-laugh-about-yourself", "self", "¿Qué te hace gracia de ti mismo/a?", "What makes you laugh about yourself?"),
   question("self-too-serious", "self", "¿Qué te tomas demasiado en serio?", "What do you take too seriously?"),
   question("self-life-a-meme", "self", "¿Qué parte de tu vida parece un meme últimamente?", "What part of your life has felt a bit like a meme lately?"),
+
+// SELF — frescas, livianas, con humor
+question("self-childhood-still", "self", "¿Qué parte de ti sigue teniendo diez años?", "What part of you is still ten years old?"),
+question("self-quiet-superpower", "self", "¿Cuál es tu superpoder silencioso?", "What is your quiet superpower?"),
+question("self-absurd-bright", "self", "¿Qué cosa absurda te alegró el rato hoy?", "What absurd thing brightened your day?"),
+question("self-unconfirmed-theory", "self", "¿Tienes alguna teoría sin confirmar sobre algo cotidiano?", "Do you have an unconfirmed theory about something ordinary?"),
+question("self-hard-to-explain", "self", "¿Qué es lo más difícil de explicar de ti mismo/a?", "What is the hardest thing to explain about yourself?"),
+question("self-lightest-when", "self", "¿Cuándo te sientes más ligero/a?", "When do you feel lightest?"),
+question("self-past-tenderness", "self", "¿Qué cosa de tu pasado te da ternura ahora?", "What from your past gives you tenderness now?"),
+question("self-nobody-knew-you", "self", "¿Qué harías diferente si hoy nadie te conociera?", "What would you do differently if nobody knew you today?"),
+question("self-last-jaw-drop", "self", "¿Cuándo fue la última vez que algo te dejó sin palabras?", "When was the last time something left you genuinely speechless?"),
+question("self-weird-habit", "self", "¿Qué costumbre extraña has desarrollado sin darte cuenta?", "What weird habit have you developed without noticing?"),
+question("self-start-from-scratch", "self", "¿Qué harías diferente si hoy empezaras de cero?", "What would you do differently if you were starting today from scratch?"),
+question("self-good-at-secretly", "self", "¿En qué eres mejor de lo que admites?", "What are you better at than you admit?"),
+question("self-still-curious", "self", "¿Qué pequeña curiosidad llevas días queriendo explorar?", "What small curiosity have you been meaning to explore for days?"),
+question("self-five-years-ago-surprise", "self", "¿Qué de tu vida actual sorprendería a tu yo de hace cinco años?", "What about your current life would surprise your five-years-ago self?"),
+
+// TIME / SENSORIAL — lo que más faltaba
+question("time-first-thought", "time", "¿Qué fue lo primero que pensaste al despertar hoy?", "What was the first thing you thought when you woke up today?"),
+question("time-smell-today", "time", "¿Qué olor te acompañó hoy?", "What smell accompanied you today?"),
+question("time-window-moment", "time", "¿Cuándo miraste por la ventana? ¿Qué viste?", "When did you look out the window today? What did you see?"),
+question("time-texture-liked", "time", "¿Qué textura tocaste hoy que te gustó?", "What texture did you touch today that you liked?"),
+question("time-everything-okay-moment", "time", "¿Hubo algún momento en que todo parecía estar bien?", "Was there a moment today when everything seemed okay?"),
+question("time-unexpected-sound", "time", "¿Qué sonido escuchaste hoy que no esperabas?", "What unexpected sound did you hear today?"),
+question("time-light-caught", "time", "¿Qué luz te llamó la atención hoy?", "What light caught your attention today?"),
+question("time-small-unnoticed", "time", "¿Qué cosa pequeña notaste hoy que normalmente se te escapa?", "What small thing did you notice today that usually escapes you?"),
+question("time-nothing-moment", "time", "¿Cuándo te tomaste un momento para no hacer nada del todo?", "When did you take a moment to do absolutely nothing?"),
+question("time-world-smaller", "time", "¿En qué momento de hoy el mundo pareció más pequeño de lo normal?", "When today did the world feel smaller than usual?"),
+question("time-flavor-memory", "time", "¿Qué sabor te dejó un recuerdo hoy?", "What flavor left you with a memory today?"),
+question("time-most-human-moment", "time", "¿En qué momento de hoy te sentiste más humano/a?", "At what moment today did you feel most human?"),
+question("time-color-without-noticing", "time", "¿Qué color dominó tu día sin que te dieras cuenta?", "What color dominated your day without you noticing?"),
+question("time-brief-beauty", "time", "¿Qué cosa ordinaria te pareció hermosa hoy?", "What ordinary thing struck you as beautiful today?"),
+question("time-would-photograph", "time", "¿Qué habrías fotografiado hoy si llevaras cámara?", "What would you have photographed today if you had a camera with you?"),
+question("time-comfortable-silence", "time", "¿Hubo algún silencio cómodo hoy?", "Was there a comfortable silence today?"),
+
+// BODY — más liviano y curioso
+question("body-deep-breath-when", "body", "¿Cuándo respiraste más profundo hoy?", "When did you breathe most deeply today?"),
+question("body-relaxed-position", "body", "¿Qué posición adoptó tu cuerpo cuando se relajó de verdad?", "What position did your body take when it truly relaxed?"),
+question("body-clear-yes", "body", "¿Hubo algún momento en que tu cuerpo dijo 'sí' claramente?", "Was there a moment today when your body gave a clear yes?"),
+question("body-small-movement-good", "body", "¿Qué movimiento pequeño hiciste hoy que te sentó bien?", "What small movement did you make today that felt good?"),
+question("body-right-temperature", "body", "¿Cuándo se sintió tu cuerpo más a temperatura correcta hoy?", "When did your body feel at just the right temperature today?"),
+
+// BONDS — calidez y humor
+question("bond-smile-for-real", "bonds", "¿A quién le sonreíste de verdad hoy?", "Who did you genuinely smile at today?"),
+question("bond-small-gesture-arrived", "bonds", "¿Qué pequeño gesto de alguien te llegó más de lo esperado?", "What small gesture from someone reached you more than expected?"),
+question("bond-understood-without-explaining", "bonds", "¿Cuándo te sentiste comprendido/a sin tener que explicar demasiado?", "When did you feel understood without having to explain much?"),
+question("bond-photo-to-send", "bonds", "¿A quién le mandarías una foto de algo que viste hoy?", "Who would you send a photo of something you saw today?"),
+question("bond-best-friend-reaction", "bonds", "¿Qué haría tu mejor amigo/a si viera tu día de hoy?", "What would your best friend do if they saw your day today?"),
+question("bond-what-you-miss", "bonds", "¿Qué echas de menos de alguien que no ves mucho?", "What do you miss about someone you do not see often?"),
+question("bond-owe-a-funny-story", "bonds", "¿Hay alguien a quien le debes contar algo gracioso?", "Is there someone you owe a funny story to?"),
+question("bond-human-warmth-today", "bonds", "¿Cuándo sentiste calor humano hoy, aunque fuera de lejos?", "When did you feel human warmth today, even from a distance?"),
+
+// CREATIVITY — observación y juego
+question("creativity-ugly-interesting", "creativity", "¿Qué cosa 'fea' encontraste interesante hoy?", "What 'ugly' thing did you find interesting today?"),
+question("creativity-first-time-observed", "creativity", "¿Qué observaste hoy como si fuera la primera vez?", "What did you observe today as if for the first time?"),
+question("creativity-pattern-calling", "creativity", "¿Qué patrón o forma lleva días llamándote la atención?", "What pattern or shape has been calling your attention lately?"),
+question("creativity-day-painting-style", "creativity", "Si tu día fuera un cuadro, ¿qué técnica usaría?", "If your day were a painting, what technique would it use?"),
+question("creativity-write-without-ending", "creativity", "¿Qué te gustaría escribir aunque no sepas cómo terminará?", "What would you like to write even without knowing how it ends?"),
+question("creativity-make-from-memory", "creativity", "¿Qué recuerdo de hoy querrías convertir en algo tangible?", "What memory from today would you like to turn into something tangible?"),
+question("creativity-smallest-beautiful", "creativity", "¿Cuál fue la cosa más pequeña hermosa que viste hoy?", "What was the smallest beautiful thing you saw today?"),
+
+// CARE — amabilidad sin drama
+question("care-kindest-to-self", "care", "¿Cuándo te trataste con más amabilidad hoy?", "When were you kindest to yourself today?"),
+question("care-notice-without-asking", "care", "¿Qué te gustaría que alguien notara en ti sin tener que pedirlo?", "What would you like someone to notice in you without having to ask?"),
+question("care-feeling-lacks-name", "care", "¿A qué emoción de hoy le falta nombre todavía?", "What feeling from today still lacks a name?"),
+question("care-talk-like-best-friend", "care", "¿Cómo te hablarías si fueras tu mejor amigo/a?", "How would you talk to yourself if you were your best friend?"),
+question("care-celebrate-this-week", "care", "¿Qué podrías celebrar esta semana que normalmente no celebrarías?", "What could you celebrate this week that you normally would not?"),
+question("care-positive-thought-slow", "care", "¿Qué pensamiento positivo sobre ti mismo/a tardaste en creerte?", "What positive thought about yourself took you a while to believe?"),
+question("care-rest-needed-where", "care", "¿Qué parte de tu cuerpo o mente agradecería descanso ahora mismo?", "What part of your body or mind would appreciate rest right now?"),
+
+// MEANING — curiosidad y raíces
+question("meaning-question-pending", "meaning", "¿Hay alguna pregunta que llevas días queriendo responder?", "Is there a question you have been wanting to answer for days?"),
+question("meaning-growing-slow", "meaning", "¿Qué sientes que crece despacio pero seguro en tu vida?", "What do you feel is growing slowly but surely in your life?"),
+question("meaning-exactly-what-needed", "meaning", "¿Qué parte de hoy fue exactamente lo que necesitabas?", "What part of today was exactly what you needed?"),
+question("meaning-value-appeared", "meaning", "¿Qué valor tuyo apareció hoy sin que lo llamaras?", "What value of yours showed up today without being called?"),
+question("meaning-small-wonder", "meaning", "¿Qué cosa pequeña de tu vida actual todavía te maravilla?", "What small thing about your current life still amazes you?"),
+
+// FUTURE — ligero y concreto
+question("future-next-year-person", "future", "¿Qué tipo de persona quieres ser dentro de un año, sin presión?", "What kind of person do you want to be in a year, no pressure?"),
+question("future-this-week-no-fear", "future", "¿Qué harías esta semana si no tuvieras miedo de que no saliera bien?", "What would you do this week if you were not afraid of it not working out?"),
+question("future-good-without-trying", "future", "¿Qué cosa buena podría pasarte si no te metes en tu propio camino?", "What good thing could happen to you if you stopped getting in your own way?"),
+question("future-help-postponed", "future", "¿Qué te ayudaría a avanzar en algo que llevas tiempo posponiendo?", "What would help you make progress on something you have been postponing?"),
+
 ];
