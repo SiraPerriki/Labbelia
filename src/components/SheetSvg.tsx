@@ -1,5 +1,5 @@
 import { LabelCard, LabelSize, Locale } from "../types";
-import { LabelGroup } from "./LabelSvg";
+import { LabelGroup, SVG_FONT_IMPORT } from "./LabelSvg";
 
 interface SheetSvgProps {
   cards: LabelCard[];
@@ -42,6 +42,9 @@ export function SheetSvg(props: SheetSvgProps) {
       role="img"
       aria-label={ariaLabel}
     >
+      <defs>
+        <style>{SVG_FONT_IMPORT}</style>
+      </defs>
       <rect width={A4_WIDTH_MM} height={A4_HEIGHT_MM} fill="#ffffff" />
       <rect
         x={2.5}

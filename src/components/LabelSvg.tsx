@@ -3,6 +3,10 @@ import { getMoodTrackerRows, getMoodTrackerTemplate, getMoodTrackerTitle } from 
 import { localize } from "../lib/i18n";
 import { LabelCard, LabelSize, Locale, Palette, ThemeId } from "../types";
 
+export const SVG_FONT_IMPORT = `
+  @import url("https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Indie+Flower&family=Quicksand:wght@500;600;700&display=swap");
+`;
+
 interface SharedProps {
   card: LabelCard;
   locale: Locale;
@@ -450,17 +454,19 @@ function layoutScore(
   const widthUsage = layout.width / bounds.maxWidth;
   const heightUsage = layout.height / bounds.maxHeight;
   const linePenalty = Math.max(0, layout.lines.length - metrics.targetLines) * 0.12;
+  const whitespacePenalty = Math.max(0, 0.9 - metrics.textWidthRatio) * 0.7;
 
   return (
-    layout.fontSize * 2.35 -
+    layout.fontSize * 2.7 -
     undersizedPenalty +
-    metrics.density * 0.82 +
-    metrics.textWidthRatio * 0.55 +
-    metrics.textHeightRatio * 0.24 +
-    widthUsage * 0.22 +
-    heightUsage * 0.12 -
-    openness * 0.08 -
-    linePenalty
+    metrics.density * 0.66 +
+    metrics.textWidthRatio * 1.18 +
+    metrics.textHeightRatio * 0.52 +
+    widthUsage * 0.34 +
+    heightUsage * 0.18 -
+    openness * 0.16 -
+    linePenalty -
+    whitespacePenalty
   );
 }
 
@@ -478,25 +484,25 @@ function getQuestionLayout(text: string, width: number, height: number, themeId:
     ),
     maxWidth: clamp(
       baseBounds.maxWidth +
-        (stripLabel ? width * 0.18 : compactLabel ? width * 0.07 : mediumLabel ? width * 0.035 : 0),
+        (stripLabel ? width * 0.21 : compactLabel ? width * 0.085 : mediumLabel ? width * 0.05 : 0),
       baseBounds.minWidth,
-      width * (stripLabel ? 0.92 : 0.78),
+      width * (stripLabel ? 0.95 : 0.82),
     ),
     minHeight: clamp(
-      baseBounds.minHeight + (stripLabel ? height * 0.06 : compactLabel ? height * 0.015 : 0),
+      baseBounds.minHeight + (stripLabel ? height * 0.065 : compactLabel ? height * 0.02 : 0),
       baseBounds.minHeight,
-      height * 0.54,
+      height * 0.58,
     ),
     maxHeight: clamp(
       baseBounds.maxHeight +
-        (stripLabel ? height * 0.14 : compactLabel ? height * 0.12 : mediumLabel ? height * 0.06 : 0),
+        (stripLabel ? height * 0.16 : compactLabel ? height * 0.14 : mediumLabel ? height * 0.08 : 0),
       baseBounds.minHeight,
-      height * (stripLabel ? 0.62 : 0.52),
+      height * (stripLabel ? 0.66 : 0.58),
     ),
   };
-  const maxFontSize = stripLabel ? 3.32 : compactLabel ? 2.72 : height >= 46 ? 3.18 : 2.82;
-  const preferredMin = stripLabel ? 2.08 : compactLabel ? 1.72 : height >= 46 ? 1.92 : 1.72;
-  const absoluteMin = stripLabel ? 1.64 : compactLabel ? 1.3 : height >= 46 ? 1.38 : 1.24;
+  const maxFontSize = stripLabel ? 3.62 : compactLabel ? 2.94 : height >= 46 ? 3.34 : 3.02;
+  const preferredMin = stripLabel ? 2.22 : compactLabel ? 1.84 : height >= 46 ? 2.04 : 1.84;
+  const absoluteMin = stripLabel ? 1.74 : compactLabel ? 1.38 : height >= 46 ? 1.48 : 1.32;
   let best: QuestionLayout | null = null;
   let emergency: QuestionLayout | null = null;
   let bestScore = -Infinity;
@@ -526,23 +532,23 @@ function getQuestionLayout(text: string, width: number, height: number, themeId:
           : 2.45;
   const targetLines = stripLabel ? 2 : compactLabel ? 3 : 4;
 
-  for (let maxChars = 7; maxChars <= (stripLabel ? 44 : 38); maxChars += 1) {
+  for (let maxChars = 8; maxChars <= (stripLabel ? 48 : 40); maxChars += 1) {
     const lines = splitText(text, maxChars);
     const longestLine = lines.reduce((max, line) => Math.max(max, measureLine(line)), 1);
-    const lineStep = stripLabel ? 1.08 : 1.13;
+    const lineStep = stripLabel ? 1.06 : 1.11;
     const lineUnits = 1 + Math.max(0, lines.length - 1) * lineStep;
-    const widthFit = (bounds.maxWidth - 4.2) / longestLine;
-    const heightFit = (bounds.maxHeight - 3.4) / lineUnits;
+    const widthFit = (bounds.maxWidth - 3.1) / longestLine;
+    const heightFit = (bounds.maxHeight - 2.5) / lineUnits;
     const fontSize = Math.min(maxFontSize, widthFit, heightFit);
     const textWidth = longestLine * fontSize;
     const textHeight = fontSize + Math.max(0, lines.length - 1) * fontSize * lineStep;
     const horizontalPaddingFactor = Math.max(
-      compactLabel ? 0.78 : 0.94,
-      baseHorizontalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.42 : 0.32),
+      compactLabel ? 0.68 : 0.84,
+      baseHorizontalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.38 : 0.28),
     );
     const verticalPaddingFactor = Math.max(
-      compactLabel ? 0.9 : 1.02,
-      baseVerticalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.32 : 0.22),
+      compactLabel ? 0.82 : 0.94,
+      baseVerticalPaddingFactor - Math.max(0, lines.length - 2) * (compactLabel ? 0.28 : 0.18),
     );
     const boxWidth = clamp(
       textWidth + fontSize * horizontalPaddingFactor,
@@ -586,7 +592,11 @@ function getQuestionLayout(text: string, width: number, height: number, themeId:
   }
 
   if (best) {
-    return best;
+    return {
+      ...best,
+      fontSize: best.fontSize * 1.02,
+      lineHeight: best.lineHeight * 1.02,
+    };
   }
 
   return {
@@ -912,10 +922,10 @@ function QuestionText(props: {
         x={layout.x + layout.width / 2}
         y={firstLineY}
         textAnchor="middle"
-        fontFamily="'Quicksand', 'Nunito', 'Segoe UI', sans-serif"
-        fontSize={layout.fontSize}
-        fontWeight="600"
-        letterSpacing="0.012em"
+        fontFamily="'Gochi Hand', 'Indie Flower', 'Quicksand', 'Nunito', cursive"
+        fontSize={layout.fontSize * 1.03}
+        fontWeight="400"
+        letterSpacing="0.004em"
         fill={ink}
         clipPath={`url(#${clipId})`}
       >
@@ -5624,6 +5634,9 @@ export function LabelSvg(props: SharedProps) {
       role="img"
       aria-label={ariaLabel}
     >
+      <defs>
+        <style>{SVG_FONT_IMPORT}</style>
+      </defs>
       <LabelArt
         card={props.card}
         locale={props.locale}
