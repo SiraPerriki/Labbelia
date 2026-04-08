@@ -6,6 +6,7 @@ import { UI_COPY } from "./data/content";
 import { LABEL_SIZES } from "./data/design";
 import { getMoodTrackerTitle, MOOD_TRACKER_TEMPLATES, MOOD_TRACKER_TITLE } from "./data/mood";
 import { QUESTION_BANK } from "./data/questions";
+import { setAnalyticsConsent } from "./lib/analytics";
 import { downloadCardSvg, downloadSheetPng, downloadSheetSvg } from "./lib/export";
 import { ALL_CATEGORIES, createChallengeCard, createMoodBatch, createPromptCard, rerollCardLook } from "./lib/generator";
 import { localize } from "./lib/i18n";
@@ -13,9 +14,21 @@ import { CardContentMode, LabelCard, LabelSizeId, Locale } from "./types";
 
 const BATCH_SIZE = 1;
 const UI_THEME_STORAGE_KEY = "labbelia-ui-theme-v2";
+const COOKIE_CONSENT_STORAGE_KEY = "labbelia-cookie-consent-v1";
+
+type CookieConsent = "unknown" | "accepted" | "rejected";
 
 function text(locale: Locale, value: { es: string; en: string }): string {
   return localize(locale, value);
+}
+
+function getStoredCookieConsent(): CookieConsent {
+  if (typeof window === "undefined") {
+    return "unknown";
+  }
+
+  const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
+  return stored === "accepted" || stored === "rejected" ? stored : "unknown";
 }
 
 function App() {
@@ -56,6 +69,12 @@ function App() {
     challenge: null,
     mood: null,
   });
+  const [cookieConsent, setCookieConsent] = useState<CookieConsent>(() => getStoredCookieConsent());
+  const [cookieBannerOpen, setCookieBannerOpen] = useState(() => getStoredCookieConsent() === "unknown");
+  const [cookiePreferencesOpen, setCookiePreferencesOpen] = useState(false);
+  const [analyticsCookiesEnabled, setAnalyticsCookiesEnabled] = useState(
+    () => getStoredCookieConsent() === "accepted",
+  );
   const seenQuestionIdsRef = useRef<Record<"prompt" | "challenge", string[]>>({
     prompt: [],
     challenge: [],
@@ -76,6 +95,15 @@ function App() {
     window.localStorage.setItem(UI_THEME_STORAGE_KEY, uiTheme);
     window.localStorage.setItem("labbelia-ui-theme", uiTheme);
   }, [uiTheme]);
+
+  useEffect(() => {
+    if (cookieConsent === "unknown") {
+      return;
+    }
+
+    window.localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, cookieConsent);
+    setAnalyticsConsent(cookieConsent === "accepted");
+  }, [cookieConsent]);
 
   useEffect(() => {
     function syncTopbarMode() {
@@ -331,6 +359,36 @@ function App() {
     return card.contentMode === "mood"
       ? localize(locale, getMoodTrackerTitle(card.moodTemplateId))
       : localize(locale, card.question.text);
+  }
+
+  function acceptAnalyticsCookies(): void {
+    setAnalyticsCookiesEnabled(true);
+    setCookieConsent("accepted");
+    setCookiePreferencesOpen(false);
+    setCookieBannerOpen(false);
+  }
+
+  function rejectOptionalCookies(): void {
+    setAnalyticsCookiesEnabled(false);
+    setCookieConsent("rejected");
+    setCookiePreferencesOpen(false);
+    setCookieBannerOpen(false);
+  }
+
+  function saveCookiePreferences(): void {
+    setCookieConsent(analyticsCookiesEnabled ? "accepted" : "rejected");
+    setCookiePreferencesOpen(false);
+    setCookieBannerOpen(false);
+  }
+
+  function openCookiePreferences(): void {
+    setCookieBannerOpen(true);
+    setCookiePreferencesOpen(false);
+  }
+
+  function closeCookieBanner(): void {
+    setCookiePreferencesOpen(false);
+    setCookieBannerOpen(false);
   }
 
   const currentCard = candidates[0];
@@ -721,8 +779,104 @@ function App() {
             <span className="site-footer-link-symbol site-footer-link-symbol-mail">✉</span>
             <span>Correo · Sira.Perriki@proton.me</span>
           </a>
+          <button
+            className="site-footer-link-button"
+            onClick={openCookiePreferences}
+            type="button"
+          >
+            <span className="site-footer-link-symbol site-footer-link-symbol-settings">⚙</span>
+            <span>{locale === "en" ? "Cookies" : "Cookies"}</span>
+          </button>
         </nav>
       </footer>
+
+      {cookieConsent === "unknown" || cookieBannerOpen ? (
+        <aside className="cookie-banner card-surface" aria-live="polite">
+          <div className="cookie-banner-copy">
+            <div className="cookie-banner-header">
+              <p className="cookie-banner-title">
+                {locale === "en" ? "Cookies and analytics" : "Cookies y analítica"}
+              </p>
+              {cookieConsent !== "unknown" ? (
+                <button className="cookie-banner-close" onClick={closeCookieBanner} type="button">
+                  {locale === "en" ? "Close" : "Cerrar"}
+                </button>
+              ) : null}
+            </div>
+            <p className="cookie-banner-text">
+              {locale === "en"
+                ? "Labbelia uses only essential storage and optional analytics. If you accept analytics, Google Analytics will collect aggregated data about visits, viewed pages, device, language and basic navigation actions."
+                : "Labbelia usa solo almacenamiento esencial y analítica opcional. Si aceptas la analítica, Google Analytics recogerá datos agregados sobre visitas, páginas vistas, dispositivo, idioma y acciones básicas de navegación."}
+            </p>
+            <p className="cookie-banner-status">
+              {cookieConsent === "unknown"
+                ? locale === "en"
+                  ? "Analytics stays blocked until you choose."
+                  : "La analítica permanece bloqueada hasta que elijas."
+                : analyticsCookiesEnabled
+                  ? locale === "en"
+                    ? "Current setting: analytics accepted."
+                    : "Estado actual: analítica aceptada."
+                  : locale === "en"
+                    ? "Current setting: only essential storage."
+                    : "Estado actual: solo almacenamiento esencial."}
+            </p>
+          </div>
+
+          <div className="cookie-banner-actions">
+            <button className="button button-secondary cookie-choice-reject" onClick={rejectOptionalCookies} type="button">
+              {locale === "en" ? "Reject analytics" : "Rechazar analítica"}
+            </button>
+            <button
+              className="button button-ghost cookie-choice-configure"
+              onClick={() => setCookiePreferencesOpen((open) => !open)}
+              type="button"
+            >
+              {cookiePreferencesOpen
+                ? locale === "en"
+                  ? "Hide options"
+                  : "Ocultar opciones"
+                : locale === "en"
+                  ? "Customize"
+                  : "Personalizar"}
+            </button>
+            <button className="button button-secondary cookie-choice-accept" onClick={acceptAnalyticsCookies} type="button">
+              {locale === "en" ? "Accept analytics" : "Aceptar analítica"}
+            </button>
+          </div>
+
+          {cookiePreferencesOpen ? (
+            <div className="cookie-preferences">
+              <label className="cookie-toggle">
+                <div>
+                  <span className="cookie-toggle-title">
+                    {locale === "en" ? "Analytics cookies" : "Cookies analíticas"}
+                  </span>
+                  <span className="cookie-toggle-note">
+                    {locale === "en"
+                      ? "They help us understand which views and actions are useful."
+                      : "Nos ayudan a entender qué vistas y acciones resultan útiles."}
+                  </span>
+                </div>
+                <input
+                  checked={analyticsCookiesEnabled}
+                  onChange={(event) => setAnalyticsCookiesEnabled(event.target.checked)}
+                  type="checkbox"
+                />
+              </label>
+
+              <div className="cookie-preferences-actions">
+                <button className="button button-ghost" onClick={closeCookieBanner} type="button">
+                  {locale === "en" ? "Close" : "Cerrar"}
+                </button>
+                <button className="button button-primary" onClick={saveCookiePreferences} type="button">
+                  {locale === "en" ? "Save selection" : "Guardar selección"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </aside>
+      ) : null}
     </div>
   );
 }
