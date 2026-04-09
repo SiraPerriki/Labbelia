@@ -12,6 +12,7 @@ export type CategoryId =
 
 export type LabelSizeId = "classic" | "mini" | "wide" | "square";
 export type CardContentMode = "prompt" | "challenge" | "mood";
+export type LabelTypefaceId = "gochi" | "indie" | "walter";
 
 export type ThemeId =
   | "postage"

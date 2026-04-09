@@ -1,10 +1,11 @@
-import { LabelCard, LabelSize, Locale } from "../types";
+import { LabelCard, LabelSize, LabelTypefaceId, Locale } from "../types";
 import { LabelSvg } from "./LabelSvg";
 
 interface CandidateCardProps {
   card: LabelCard;
   size: LabelSize;
   locale: Locale;
+  typeface?: LabelTypefaceId;
   onDownload: (card: LabelCard) => void;
   onRefreshLook: () => void;
   onRefreshQuestion?: () => void;
@@ -41,6 +42,7 @@ export function CandidateCard(props: CandidateCardProps) {
           card={card}
           locale={locale}
           size={size}
+          typeface={props.typeface}
         />
       </div>
       <div className="candidate-actions">

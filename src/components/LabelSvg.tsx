@@ -1,16 +1,32 @@
+import { createContext, useContext } from "react";
 import { PALETTES } from "../data/design";
 import { getMoodTrackerRows, getMoodTrackerTemplate, getMoodTrackerTitle } from "../data/mood";
 import { localize } from "../lib/i18n";
-import { LabelCard, LabelSize, Locale, Palette, ThemeId } from "../types";
+import { LabelCard, LabelSize, LabelTypefaceId, Locale, Palette, ThemeId } from "../types";
 
 export const SVG_FONT_IMPORT = `
-  @import url("https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Indie+Flower&family=Quicksand:wght@500;600;700&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Indie+Flower&family=Walter+Turncoat&family=Quicksand:wght@500;600;700&display=swap");
 `;
+
+const LabelTypefaceContext = createContext<LabelTypefaceId>("gochi");
+
+function handwritingFontFamily(typeface: LabelTypefaceId): string {
+  switch (typeface) {
+    case "indie":
+      return "'Indie Flower', 'Gochi Hand', 'Quicksand', 'Nunito', cursive";
+    case "walter":
+      return "'Walter Turncoat', 'Gochi Hand', 'Indie Flower', 'Quicksand', cursive";
+    case "gochi":
+    default:
+      return "'Gochi Hand', 'Indie Flower', 'Quicksand', 'Nunito', cursive";
+  }
+}
 
 interface SharedProps {
   card: LabelCard;
   locale: Locale;
   size: LabelSize;
+  typeface?: LabelTypefaceId;
 }
 
 interface ArtProps extends SharedProps {
@@ -834,6 +850,7 @@ function QuestionText(props: {
   lines: string[];
 }) {
   const { clipId, layout, ink, lines } = props;
+  const typeface = useContext(LabelTypefaceContext);
 
   if (layout.variant === "mood") {
     const rows = lines.slice(1);
@@ -922,7 +939,7 @@ function QuestionText(props: {
         x={layout.x + layout.width / 2}
         y={firstLineY}
         textAnchor="middle"
-        fontFamily="'Gochi Hand', 'Indie Flower', 'Quicksand', 'Nunito', cursive"
+        fontFamily={handwritingFontFamily(typeface)}
         fontSize={layout.fontSize * 1.03}
         fontWeight="400"
         letterSpacing="0.004em"
@@ -5637,13 +5654,15 @@ export function LabelSvg(props: SharedProps) {
       <defs>
         <style>{SVG_FONT_IMPORT}</style>
       </defs>
-      <LabelArt
-        card={props.card}
-        locale={props.locale}
-        size={props.size}
-        width={size.widthMm}
-        height={size.heightMm}
-      />
+      <LabelTypefaceContext.Provider value={props.typeface ?? "gochi"}>
+        <LabelArt
+          card={props.card}
+          locale={props.locale}
+          size={props.size}
+          width={size.widthMm}
+          height={size.heightMm}
+        />
+      </LabelTypefaceContext.Provider>
     </svg>
   );
 }
@@ -5653,13 +5672,15 @@ export function LabelGroup(props: SharedProps & { x: number; y: number }) {
 
   return (
     <g transform={`translate(${x} ${y})`}>
-      <LabelArt
-        card={props.card}
-        locale={props.locale}
-        size={size}
-        width={size.widthMm}
-        height={size.heightMm}
-      />
+      <LabelTypefaceContext.Provider value={props.typeface ?? "gochi"}>
+        <LabelArt
+          card={props.card}
+          locale={props.locale}
+          size={size}
+          width={size.widthMm}
+          height={size.heightMm}
+        />
+      </LabelTypefaceContext.Provider>
     </g>
   );
 }

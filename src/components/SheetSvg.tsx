@@ -1,10 +1,11 @@
-import { LabelCard, LabelSize, Locale } from "../types";
+import { LabelCard, LabelSize, LabelTypefaceId, Locale } from "../types";
 import { LabelGroup, SVG_FONT_IMPORT } from "./LabelSvg";
 
 interface SheetSvgProps {
   cards: LabelCard[];
   locale: Locale;
   size: LabelSize;
+  typeface?: LabelTypefaceId;
   showPlaceholders?: boolean;
 }
 
@@ -26,7 +27,7 @@ function slotPosition(index: number, size: LabelSize) {
 }
 
 export function SheetSvg(props: SheetSvgProps) {
-  const { cards, locale, size, showPlaceholders = false } = props;
+  const { cards, locale, size, typeface = "gochi", showPlaceholders = false } = props;
   const capacity = size.columns * size.rows;
   const ariaLabel =
     locale === "en"
@@ -79,6 +80,7 @@ export function SheetSvg(props: SheetSvgProps) {
               card={card}
               locale={locale}
               size={size}
+              typeface={typeface}
               x={position.x}
               y={position.y}
             />

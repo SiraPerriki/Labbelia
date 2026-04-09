@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SheetSvg } from "../components/SheetSvg";
 import { LabelSvg } from "../components/LabelSvg";
 import { localize } from "./i18n";
-import { LabelCard, LabelSize, Locale } from "../types";
+import { LabelCard, LabelSize, LabelTypefaceId, Locale } from "../types";
 
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
@@ -45,12 +45,13 @@ function exportName(card: LabelCard, locale: Locale): string {
   return slugify(localize(locale, card.question.text)) || "label";
 }
 
-export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale): void {
+export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale, typeface: LabelTypefaceId): void {
   const markup = renderToStaticMarkup(
     <LabelSvg
       card={card}
       locale={locale}
       size={size}
+      typeface={typeface}
     />,
   );
 
@@ -60,12 +61,13 @@ export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale
   );
 }
 
-export function downloadSheetSvg(cards: LabelCard[], size: LabelSize, locale: Locale): void {
+export function downloadSheetSvg(cards: LabelCard[], size: LabelSize, locale: Locale, typeface: LabelTypefaceId): void {
   const markup = renderToStaticMarkup(
     <SheetSvg
       cards={cards}
       locale={locale}
       size={size}
+      typeface={typeface}
       showPlaceholders={cards.length === 0}
     />,
   );
@@ -80,12 +82,14 @@ export async function downloadSheetPng(
   cards: LabelCard[],
   size: LabelSize,
   locale: Locale,
+  typeface: LabelTypefaceId,
 ): Promise<void> {
   const markup = renderToStaticMarkup(
     <SheetSvg
       cards={cards}
       locale={locale}
       size={size}
+      typeface={typeface}
       showPlaceholders={cards.length === 0}
     />,
   );

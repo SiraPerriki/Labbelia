@@ -10,11 +10,21 @@ import { setAnalyticsConsent } from "./lib/analytics";
 import { downloadCardSvg, downloadSheetPng, downloadSheetSvg } from "./lib/export";
 import { ALL_CATEGORIES, createChallengeCard, createMoodBatch, createPromptCard, rerollCardLook } from "./lib/generator";
 import { localize } from "./lib/i18n";
-import { CardContentMode, LabelCard, LabelSizeId, Locale } from "./types";
+import { CardContentMode, LabelCard, LabelSizeId, LabelTypefaceId, Locale } from "./types";
 
 const BATCH_SIZE = 1;
 const UI_THEME_STORAGE_KEY = "labbelia-ui-theme-v2";
 const COOKIE_CONSENT_STORAGE_KEY = "labbelia-cookie-consent-v1";
+const LABEL_TYPEFACE_STORAGE_KEY = "labbelia-label-typeface-v1";
+
+const LABEL_TYPEFACE_OPTIONS: Array<{
+  id: LabelTypefaceId;
+  label: { es: string; en: string };
+}> = [
+  { id: "gochi", label: { es: "Gochi", en: "Gochi" } },
+  { id: "indie", label: { es: "Indie", en: "Indie" } },
+  { id: "walter", label: { es: "Walter", en: "Walter" } },
+];
 
 type CookieConsent = "unknown" | "accepted" | "rejected";
 
@@ -52,6 +62,14 @@ function App() {
     return "dark";
   });
   const [contentMode, setContentMode] = useState<CardContentMode>("prompt");
+  const [labelTypeface, setLabelTypeface] = useState<LabelTypefaceId>(() => {
+    if (typeof window === "undefined") {
+      return "gochi";
+    }
+
+    const stored = window.localStorage.getItem(LABEL_TYPEFACE_STORAGE_KEY);
+    return stored === "indie" || stored === "walter" || stored === "gochi" ? stored : "gochi";
+  });
   const [candidates, setCandidates] = useState<LabelCard[]>([]);
   const [sheetCardsByMode, setSheetCardsByMode] = useState<Record<CardContentMode, LabelCard[]>>({
     prompt: [],
@@ -95,6 +113,10 @@ function App() {
     window.localStorage.setItem(UI_THEME_STORAGE_KEY, uiTheme);
     window.localStorage.setItem("labbelia-ui-theme", uiTheme);
   }, [uiTheme]);
+
+  useEffect(() => {
+    window.localStorage.setItem(LABEL_TYPEFACE_STORAGE_KEY, labelTypeface);
+  }, [labelTypeface]);
 
   useEffect(() => {
     if (cookieConsent === "unknown") {
@@ -345,7 +367,7 @@ function App() {
     setExportingPng(true);
 
     try {
-      await downloadSheetPng(sheetCards, size, locale);
+      await downloadSheetPng(sheetCards, size, locale, labelTypeface);
     } finally {
       setExportingPng(false);
     }
@@ -392,6 +414,7 @@ function App() {
   }
 
   const currentCard = candidates[0];
+  const showTypefacePicker = contentMode !== "mood";
   const brandBlock = (
     <div className="topbar-copy">
       <div className="brand-mark" aria-hidden="true">
@@ -537,6 +560,22 @@ function App() {
                       </span>
                     </div>
                     <div className="focus-status-strip">
+                      {showTypefacePicker ? (
+                        <label className="mini-select" htmlFor="label-typeface-select">
+                          <span>{locale === "en" ? "Font" : "Tipografía"}</span>
+                          <select
+                            id="label-typeface-select"
+                            value={labelTypeface}
+                            onChange={(event) => setLabelTypeface(event.target.value as LabelTypefaceId)}
+                          >
+                            {LABEL_TYPEFACE_OPTIONS.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {text(locale, option.label)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : null}
                       <span className="mini-stat mini-stat-soft">
                         {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
                       </span>
@@ -597,7 +636,8 @@ function App() {
                     card={currentCard}
                     size={size}
                     locale={locale}
-                    onDownload={(item) => downloadCardSvg(item, size, locale)}
+                    typeface={labelTypeface}
+                    onDownload={(item) => downloadCardSvg(item, size, locale, labelTypeface)}
                     onRefreshLook={rerollCurrentLook}
                     onRefreshQuestion={currentCard.contentMode === "mood" ? rerollCurrentMoodTemplate : rerollCurrentQuestion}
                     downloadLabel={locale === "en" ? "↓ Single SVG" : "↓ SVG individual"}
@@ -697,6 +737,7 @@ function App() {
                 cards={sheetCards}
                 locale={locale}
                 size={size}
+                typeface={labelTypeface}
                 showPlaceholders
               />
             </div>
@@ -706,7 +747,7 @@ function App() {
             <button
               className="button button-primary"
               disabled={sheetCards.length === 0}
-              onClick={() => downloadSheetSvg(sheetCards, size, locale)}
+              onClick={() => downloadSheetSvg(sheetCards, size, locale, labelTypeface)}
               type="button"
             >
               {locale === "en" ? "↓ Download A4 SVG" : "↓ Descargar A4 SVG"}
