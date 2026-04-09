@@ -728,7 +728,7 @@ function App() {
           </div>
         </section>
 
-        <section className="sheet-panel card-surface">
+        <section className="sheet-panel card-surface" data-nosnippet>
           <div className="section-header section-header-inline">
             <div>
               <h2>
@@ -847,7 +847,7 @@ function App() {
         </section>
       </main>
 
-      <footer className="site-footer card-surface">
+      <footer className="site-footer card-surface" data-nosnippet>
         <div className="site-footer-copy">
           <p className="site-footer-title">Labbelia</p>
           <p className="site-footer-note">
