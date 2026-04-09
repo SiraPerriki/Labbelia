@@ -704,6 +704,11 @@ button {
   min-width: 76px;
 }
 
+.mini-select select option {
+  background: #f7fbf5;
+  color: #4f5d58;
+}
+
 .focus-kicker {
   display: inline-flex;
   align-items: center;
@@ -732,6 +737,11 @@ button {
   color: #e5f3ef;
 }
 
+.app-shell[data-ui-theme="dark"] .mini-select select option {
+  background: #24303c;
+  color: #eef6f3;
+}
+
 .focus-lore {
   margin: 0;
   max-width: 34ch;
@@ -746,6 +756,44 @@ button {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
+}
+
+.mini-toast {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: -2px auto 2px;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(252, 223, 225, 0.82);
+  background: linear-gradient(180deg, rgba(255, 251, 249, 0.96), rgba(255, 244, 247, 0.92));
+  color: #9a6e79;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 6px 14px rgba(187, 117, 135, 0.08);
+}
+
+.mini-toast-heart {
+  color: #f17d97;
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.app-shell[data-ui-theme="dark"] .mini-toast {
+  border-color: rgba(249, 103, 138, 0.2);
+  background: linear-gradient(180deg, rgba(65, 50, 64, 0.92), rgba(40, 48, 60, 0.94));
+  color: #f3dce5;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 16px rgba(0, 0, 0, 0.18);
+}
+
+.app-shell[data-ui-theme="dark"] .mini-toast-heart {
+  color: #ff9db4;
 }
 
 .orbit-panel {
@@ -1102,13 +1150,16 @@ button {
 
 .sheet-meta {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 6px;
   color: #83796e;
   font-weight: 700;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
+}
+
+.sheet-meta-inline {
+  align-items: center;
 }
 
 .print-area {
@@ -1244,16 +1295,17 @@ button {
 }
 
 .sheet-panel .section-header {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .sheet-panel .section-header h2 {
-  font-size: 1.04rem;
+  font-size: 1rem;
+  line-height: 1.08;
 }
 
 .sheet-panel .section-header p {
-  font-size: 0.84rem;
-  line-height: 1.25;
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
 .sheet-panel .button {

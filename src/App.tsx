@@ -42,6 +42,7 @@ function getStoredCookieConsent(): CookieConsent {
 }
 
 function App() {
+  type SheetBucket = "strip" | "mood";
   const [locale, setLocale] = useState<Locale>(() => {
     const stored = window.localStorage.getItem("paper-hearts-locale");
     return stored === "en" ? "en" : "es";
@@ -71,9 +72,8 @@ function App() {
     return stored === "indie" || stored === "walter" || stored === "gochi" ? stored : "gochi";
   });
   const [candidates, setCandidates] = useState<LabelCard[]>([]);
-  const [sheetCardsByMode, setSheetCardsByMode] = useState<Record<CardContentMode, LabelCard[]>>({
-    prompt: [],
-    challenge: [],
+  const [sheetCardsByMode, setSheetCardsByMode] = useState<Record<SheetBucket, LabelCard[]>>({
+    strip: [],
     mood: [],
   });
   const [exportingPng, setExportingPng] = useState(false);
@@ -87,6 +87,7 @@ function App() {
     challenge: null,
     mood: null,
   });
+  const [sheetFullToast, setSheetFullToast] = useState<string | null>(null);
   const [cookieConsent, setCookieConsent] = useState<CookieConsent>(() => getStoredCookieConsent());
   const [cookieBannerOpen, setCookieBannerOpen] = useState(() => getStoredCookieConsent() === "unknown");
   const [cookiePreferencesOpen, setCookiePreferencesOpen] = useState(false);
@@ -97,12 +98,17 @@ function App() {
     prompt: [],
     challenge: [],
   });
+  const previousSheetCountsRef = useRef<Record<SheetBucket, number>>({
+    strip: 0,
+    mood: 0,
+  });
 
   const promptSize = LABEL_SIZES.find((option) => option.id === "mini") ?? LABEL_SIZES[0];
   const moodSize = LABEL_SIZES.find((option) => option.id === "square") ?? LABEL_SIZES[0];
   const size = contentMode === "mood" ? moodSize : promptSize;
   const sizeId: LabelSizeId = size.id;
-  const sheetCards = sheetCardsByMode[contentMode];
+  const sheetBucket: SheetBucket = contentMode === "mood" ? "mood" : "strip";
+  const sheetCards = sheetCardsByMode[sheetBucket];
   const capacity = size.columns * size.rows;
 
   useEffect(() => {
@@ -143,8 +149,45 @@ function App() {
     return () => window.removeEventListener("resize", syncTopbarMode);
   }, []);
 
+  useEffect(() => {
+    const previousCount = previousSheetCountsRef.current[sheetBucket];
+
+    if (sheetCards.length >= capacity && previousCount < capacity) {
+      setSheetFullToast(
+        sheetBucket === "mood"
+          ? locale === "en"
+            ? "♡ Full sheet. Your trackers are ready."
+            : "♡ Hoja completa. Tus trackers ya están listos."
+          : contentMode === "challenge"
+            ? locale === "en"
+              ? "♡ Full sheet. Your creative strips are ready."
+              : "♡ Hoja completa. Tus tiritas creativas ya están listas."
+            : locale === "en"
+              ? "♡ Full sheet. Your strips are ready."
+              : "♡ Hoja completa. Tus tiritas ya están listas.",
+      );
+    }
+
+    previousSheetCountsRef.current = {
+      ...previousSheetCountsRef.current,
+      [sheetBucket]: sheetCards.length,
+    };
+  }, [capacity, contentMode, locale, sheetBucket, sheetCards.length]);
+
+  useEffect(() => {
+    if (!sheetFullToast) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setSheetFullToast(null);
+    }, 2800);
+
+    return () => window.clearTimeout(timeout);
+  }, [sheetFullToast]);
+
   function idsOnSheet(mode: "prompt" | "challenge"): string[] {
-    return sheetCardsByMode[mode]
+    return sheetCardsByMode.strip
       .filter((card) => card.contentMode === mode)
       .map((card) => card.question.id);
   }
@@ -334,7 +377,7 @@ function App() {
 
     setSheetCardsByMode((current) => ({
       ...current,
-      [contentMode]: [...current[contentMode], card],
+      [sheetBucket]: [...current[sheetBucket], card],
     }));
 
     if (sheetCards.length + 1 < capacity) {
@@ -359,7 +402,7 @@ function App() {
   function removeFromSheet(cardId: string): void {
     setSheetCardsByMode((current) => ({
       ...current,
-      [contentMode]: current[contentMode].filter((card) => card.id !== cardId),
+      [sheetBucket]: current[sheetBucket].filter((card) => card.id !== cardId),
     }));
   }
 
@@ -631,6 +674,17 @@ function App() {
                             : "＋ Guardar en hoja"}
                     </button>
                   </div>
+                  {sheetFullToast ? (
+                    <div className="mini-toast" aria-live="polite" role="status">
+                      <span className="mini-toast-heart" aria-hidden="true">
+                        ♡
+                      </span>
+                      <span>{sheetFullToast}</span>
+                      <span className="mini-toast-heart" aria-hidden="true">
+                        ♡
+                      </span>
+                    </div>
+                  ) : null}
                   <CandidateCard
                     key={currentCard.id}
                     card={currentCard}
@@ -677,7 +731,19 @@ function App() {
         <section className="sheet-panel card-surface">
           <div className="section-header section-header-inline">
             <div>
-              <h2>{text(locale, UI_COPY.sheetTitle)}</h2>
+              <h2>
+                {contentMode === "mood"
+                  ? locale === "en"
+                    ? "A4 of compact mood trackers"
+                    : "A4 de mood tracker compacto"
+                  : contentMode === "challenge"
+                    ? locale === "en"
+                      ? "A4 of mini creative challenge strips"
+                      : "A4 de tiritas mini de retos creativos"
+                  : locale === "en"
+                    ? "A4 of mini journaling strips"
+                    : "A4 de tiritas mini para journaling"}
+              </h2>
               <p>
                 {contentMode === "mood"
                   ? locale === "en"
@@ -696,7 +762,7 @@ function App() {
                 onClick={() =>
                   setSheetCardsByMode((current) => ({
                     ...current,
-                    [contentMode]: [],
+                    [sheetBucket]: [],
                   }))
                 }
                 type="button"
@@ -706,29 +772,10 @@ function App() {
             </div>
           </div>
 
-          <div className="sheet-settings orbit-card">
-            <div className="sheet-format-summary">
-              <strong>
-                {contentMode === "mood"
-                  ? locale === "en"
-                    ? "Compact square mood tracker"
-                    : "Mood tracker cuadrado compacto"
-                  : contentMode === "challenge"
-                    ? locale === "en"
-                      ? "Mini creative challenge strips"
-                      : "Tiritas mini de retos creativos"
-                  : locale === "en"
-                    ? "Mini journaling strips"
-                    : "Tiritas mini para journaling"}
-              </strong>
-            </div>
-          </div>
-
-          <div className="sheet-meta">
+          <div className="sheet-meta sheet-meta-inline">
             <span>
-              {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
+              {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity} - {localize(locale, size.description)}
             </span>
-            <span>{localize(locale, size.description)}</span>
           </div>
 
           <div className="print-area">
