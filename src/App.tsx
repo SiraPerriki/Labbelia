@@ -867,6 +867,10 @@ function App() {
             <span className="site-footer-link-symbol site-footer-link-symbol-mail">✉</span>
             <span>Correo · Sira.Perriki@proton.me</span>
           </a>
+          <a href="https://ko-fi.com/siraperriki" target="_blank" rel="noreferrer">
+            <span className="site-footer-link-symbol site-footer-link-symbol-kofi">☕</span>
+            <span>{locale === "en" ? "Ko-fi · Buy me a coffee" : "Ko-fi · Invítame a un café"}</span>
+          </a>
           <button
             className="site-footer-link-button"
             onClick={openCookiePreferences}

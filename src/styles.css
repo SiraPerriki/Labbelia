@@ -1520,6 +1520,13 @@ button {
   color: #8f6416;
 }
 
+.site-footer-link-symbol-kofi {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.36), transparent 40%),
+    linear-gradient(180deg, rgba(255, 220, 153, 0.98), rgba(255, 127, 117, 0.95));
+  color: #7c3f2f;
+}
+
 .site-footer-link-symbol-settings {
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.34), transparent 40%),
@@ -1552,6 +1559,13 @@ button {
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), transparent 40%),
     linear-gradient(180deg, rgba(251, 197, 71, 0.98), rgba(205, 142, 30, 0.96));
   color: #fff9ef;
+}
+
+.app-shell[data-ui-theme="dark"] .site-footer-link-symbol-kofi {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), transparent 40%),
+    linear-gradient(180deg, rgba(255, 214, 138, 0.98), rgba(255, 127, 117, 0.96));
+  color: #fff7f1;
 }
 
 .site-footer-links a:hover,
