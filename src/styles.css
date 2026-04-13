@@ -122,17 +122,15 @@ button {
 }
 
 .card-surface {
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: var(--page-shell);
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: transparent;
   backdrop-filter: blur(18px);
-  box-shadow: 0 14px 34px rgba(187, 117, 135, 0.08);
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .card-surface {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 18px 38px rgba(0, 0, 0, 0.22);
+  box-shadow: none;
 }
 
 .topbar {
@@ -140,25 +138,20 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 10px 12px 14px;
   margin-bottom: 14px;
   background:
-    radial-gradient(circle at top left, rgba(252, 223, 225, 0.22), transparent 24%),
-    radial-gradient(circle at top right, rgba(255, 220, 153, 0.2), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 252, 0.98), rgba(255, 252, 247, 0.97)),
-    var(--page-shell);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 8px 20px rgba(187, 117, 135, 0.045);
+    radial-gradient(circle at top left, rgba(252, 223, 225, 0.12), transparent 22%),
+    radial-gradient(circle at top right, rgba(255, 220, 153, 0.1), transparent 20%);
+  border-bottom: 1px solid rgba(202, 221, 192, 0.28);
+  border-radius: 0;
 }
 
 .app-shell[data-ui-theme="dark"] .topbar {
   background:
-    radial-gradient(circle at top left, rgba(249, 103, 138, 0.08), transparent 24%),
-    radial-gradient(circle at top right, rgba(117, 199, 194, 0.08), transparent 22%),
-    linear-gradient(180deg, rgba(37, 47, 61, 0.98), rgba(27, 35, 47, 0.97)),
-    var(--page-shell);
-  border-color: rgba(117, 199, 194, 0.16);
+    radial-gradient(circle at top left, rgba(249, 103, 138, 0.06), transparent 22%),
+    radial-gradient(circle at top right, rgba(117, 199, 194, 0.06), transparent 20%);
+  border-bottom-color: rgba(117, 199, 194, 0.14);
 }
 
 .topbar-copy {
@@ -427,11 +420,11 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
-  padding: 0 10px;
-  border-radius: 12px;
-  background: rgba(202, 221, 192, 0.22);
+  padding: 0 4px;
+  border-radius: 0;
+  background: transparent;
   color: rgb(106, 164, 159);
-  border: 1px solid rgba(202, 221, 192, 0.72);
+  border: 0;
   font-weight: 800;
   font-size: 0.83rem;
   letter-spacing: 0.01em;
@@ -440,13 +433,11 @@ button {
 .language-toggle {
   display: inline-flex;
   gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(244, 250, 239, 0.98), rgba(255, 255, 249, 0.96));
-  border: 1px solid rgba(202, 221, 192, 0.62);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 4px 10px rgba(106, 164, 159, 0.08);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .language-toggle-compact {
@@ -458,25 +449,21 @@ button {
 .theme-toggle {
   display: inline-flex;
   gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 246, 220, 0.98), rgba(255, 251, 239, 0.98));
-  border: 1px solid rgba(251, 197, 71, 0.34);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 4px 10px rgba(181, 124, 5, 0.08);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .mode-toggle {
   display: inline-flex;
   gap: 6px;
-  padding: 4px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(252, 223, 225, 0.84), rgba(255, 247, 240, 0.98));
-  border: 1px solid rgba(252, 223, 225, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 6px 14px rgba(199, 93, 128, 0.08);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .mode-toggle button,
@@ -544,27 +531,21 @@ button {
 }
 
 .app-shell[data-ui-theme="dark"] .mode-toggle {
-  background: linear-gradient(180deg, rgba(67, 51, 61, 0.58), rgba(39, 47, 60, 0.98));
-  border-color: rgba(249, 103, 138, 0.16);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 6px 14px rgba(0, 0, 0, 0.24);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .language-toggle {
-  background: linear-gradient(180deg, rgba(34, 52, 58, 0.98), rgba(27, 37, 47, 0.96));
-  border-color: rgba(117, 199, 194, 0.24);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 4px 10px rgba(0, 0, 0, 0.22);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .theme-toggle {
-  background: linear-gradient(180deg, rgba(43, 58, 67, 0.92), rgba(29, 37, 48, 0.96));
-  border-color: rgba(116, 171, 180, 0.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 4px 10px rgba(0, 0, 0, 0.2);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .mode-toggle button,
@@ -620,22 +601,21 @@ button {
 .focus-panel,
 .sheet-panel {
   padding: 14px;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .focus-panel {
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(255, 220, 153, 0.18), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(252, 223, 225, 0.14), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 253, 0.99), rgba(255, 253, 248, 0.97));
-  box-shadow: 0 16px 34px rgba(187, 117, 135, 0.038);
+    radial-gradient(circle at top left, rgba(255, 220, 153, 0.08), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(252, 223, 225, 0.08), transparent 24%);
 }
 
 .app-shell[data-ui-theme="dark"] .focus-panel {
   background:
-    radial-gradient(circle at top left, rgba(251, 197, 71, 0.07), transparent 20%),
-    radial-gradient(circle at bottom right, rgba(249, 103, 138, 0.07), transparent 22%),
-    linear-gradient(180deg, rgba(35, 44, 57, 0.98), rgba(27, 34, 45, 0.98));
+    radial-gradient(circle at top left, rgba(251, 197, 71, 0.04), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(249, 103, 138, 0.04), transparent 22%);
 }
 
 .atelier-layout {
@@ -679,10 +659,10 @@ button {
   align-items: center;
   gap: 7px;
   min-height: 30px;
-  padding: 0 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(202, 221, 192, 0.66);
-  background: rgba(247, 251, 245, 0.9);
+  padding: 0 2px;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
   color: #6b887d;
   font-size: 0.78rem;
   font-weight: 800;
@@ -713,11 +693,11 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(246, 251, 245, 0.9);
+  padding: 0 2px;
+  border-radius: 0;
+  background: transparent;
   color: #5c8c85;
-  border: 1px solid rgba(202, 221, 192, 0.74);
+  border: 0;
   font-weight: 800;
   font-size: 0.79rem;
   letter-spacing: 0.01em;
@@ -728,9 +708,9 @@ button {
 .app-shell[data-ui-theme="dark"] .mini-stat-soft,
 .app-shell[data-ui-theme="dark"] .focus-sheet-state,
 .app-shell[data-ui-theme="dark"] .mini-select {
-  background: rgba(20, 42, 44, 0.74);
+  background: transparent;
   color: #96d8cf;
-  border-color: rgba(117, 199, 194, 0.28);
+  border-color: transparent;
 }
 
 .app-shell[data-ui-theme="dark"] .mini-select select {
@@ -908,17 +888,16 @@ button {
   display: grid;
   gap: 10px;
   width: 100%;
-  padding: 12px;
-  border-radius: 24px;
-  border: 1px solid rgba(202, 221, 192, 0.22);
-  background: linear-gradient(180deg, rgba(255, 255, 254, 0.98), rgba(255, 252, 247, 0.94));
-  box-shadow: 0 12px 22px rgba(160, 122, 132, 0.032);
+  padding: 4px 0 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .candidate-card {
-  border-color: rgba(117, 199, 194, 0.1);
-  background: linear-gradient(180deg, rgba(34, 43, 55, 0.98), rgba(27, 34, 45, 0.96));
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.14);
+  background: transparent;
+  box-shadow: none;
 }
 
 .candidate-preview {
@@ -926,25 +905,19 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  border-radius: 20px;
+  padding: 10px 0 6px;
+  border-radius: 0;
   background:
-    radial-gradient(circle at top left, rgba(255, 220, 153, 0.15), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(254, 172, 188, 0.1), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 252, 1), rgba(255, 253, 248, 0.98));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 10px 24px rgba(187, 117, 135, 0.03);
+    radial-gradient(circle at top left, rgba(255, 220, 153, 0.08), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(254, 172, 188, 0.06), transparent 22%);
+  box-shadow: none;
 }
 
 .app-shell[data-ui-theme="dark"] .candidate-preview {
   background:
-    radial-gradient(circle at top left, rgba(251, 197, 71, 0.06), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(249, 103, 138, 0.06), transparent 24%),
-    linear-gradient(180deg, rgba(39, 49, 61, 0.98), rgba(29, 36, 48, 0.98));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 10px 24px rgba(0, 0, 0, 0.12);
+    radial-gradient(circle at top left, rgba(251, 197, 71, 0.04), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(249, 103, 138, 0.04), transparent 22%);
+  box-shadow: none;
 }
 
 .candidate-preview-toolbar {
@@ -1168,33 +1141,27 @@ button {
 
 .sheet-panel {
   background:
-    radial-gradient(circle at top right, rgba(202, 221, 192, 0.08), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 253, 0.995), rgba(252, 250, 244, 0.985));
-  box-shadow: 0 10px 20px rgba(160, 150, 120, 0.025);
-  border-color: rgba(202, 221, 192, 0.24);
+    radial-gradient(circle at top right, rgba(202, 221, 192, 0.06), transparent 22%);
+  border-left: 1px solid rgba(202, 221, 192, 0.18);
 }
 
 .app-shell[data-ui-theme="dark"] .sheet-panel {
   background:
-    radial-gradient(circle at top right, rgba(117, 199, 194, 0.04), transparent 22%),
-    linear-gradient(180deg, rgba(33, 42, 53, 0.995), rgba(24, 30, 40, 0.985));
-  border-color: rgba(117, 199, 194, 0.12);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+    radial-gradient(circle at top right, rgba(117, 199, 194, 0.03), transparent 22%);
+  border-left-color: rgba(117, 199, 194, 0.1);
 }
 
 .sheet-frame {
   width: min(100%, 392px);
   margin: 0 auto;
-  border-radius: 20px;
-  padding: 10px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 254, 0.96), rgba(255, 255, 251, 0.92));
-  border: 1px solid rgba(202, 221, 192, 0.2);
+  border-radius: 0;
+  padding: 4px;
+  background: transparent;
+  border: 0;
 }
 
 .app-shell[data-ui-theme="dark"] .sheet-frame {
-  background: linear-gradient(180deg, rgba(36, 43, 52, 0.98), rgba(28, 34, 43, 0.96));
-  border-color: rgba(117, 199, 194, 0.1);
+  background: transparent;
 }
 
 .sheet-frame-mini {
@@ -1333,15 +1300,16 @@ button {
   grid-template-columns: auto 1fr auto;
   gap: 8px;
   align-items: start;
-  padding: 9px 10px;
-  border-radius: 14px;
-  background: rgba(255, 252, 252, 0.62);
-  border: 1px solid rgba(229, 201, 206, 0.68);
+  padding: 8px 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(202, 221, 192, 0.18);
 }
 
 .app-shell[data-ui-theme="dark"] .selected-item {
-  background: rgba(24, 29, 37, 0.76);
-  border-color: rgba(117, 199, 194, 0.12);
+  background: transparent;
+  border-top-color: rgba(117, 199, 194, 0.1);
 }
 
 .selected-index {
@@ -1398,21 +1366,13 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background:
-    linear-gradient(180deg, rgba(255, 249, 248, 0.94), rgba(252, 244, 240, 0.88)),
-    var(--page-shell);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 10px 24px rgba(153, 105, 119, 0.05);
+  background: transparent;
+  border-top: 1px solid rgba(202, 221, 192, 0.22);
 }
 
 .app-shell[data-ui-theme="dark"] .site-footer {
-  background:
-    linear-gradient(180deg, rgba(20, 27, 36, 0.94), rgba(16, 21, 29, 0.92)),
-    var(--page-shell);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 10px 24px rgba(0, 0, 0, 0.2);
+  background: transparent;
+  border-top-color: rgba(117, 199, 194, 0.12);
 }
 
 .site-footer-copy {
@@ -1466,10 +1426,10 @@ button {
   align-items: center;
   gap: 8px;
   min-height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(249, 103, 138, 0.18);
-  background: linear-gradient(180deg, rgba(255, 247, 248, 0.96), rgba(248, 252, 245, 0.92));
+  padding: 0 4px;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
   color: #7d666d;
   font-size: 0.88rem;
   font-weight: 800;
@@ -1481,8 +1441,8 @@ button {
 
 .app-shell[data-ui-theme="dark"] .site-footer-links a,
 .app-shell[data-ui-theme="dark"] .site-footer-link-button {
-  border-color: rgba(249, 103, 138, 0.14);
-  background: linear-gradient(180deg, rgba(31, 37, 46, 0.96), rgba(23, 28, 36, 0.92));
+  border-color: transparent;
+  background: transparent;
   color: #d6c2ca;
 }
 
@@ -1571,7 +1531,6 @@ button {
 .site-footer-links a:hover,
 .site-footer-link-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(249, 103, 138, 0.36);
   color: var(--mustard-deep);
 }
 
