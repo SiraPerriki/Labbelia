@@ -1,81 +1,10 @@
 import { Category, CategoryId, Question } from "../types";
 
-function toGalicianPrompt(input: string): string {
-  let text = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  const replacements: Array<[RegExp, string]> = [
-    [/^¿Que /, "Que "],
-    [/^¿Cual /, "Cal "],
-    [/^¿Como /, "Como "],
-    [/^¿Cuando /, "Cando "],
-    [/^¿Donde /, "Onde "],
-    [/^¿Quien /, "Quen "],
-    [/^¿Con quien /, "Con quen "],
-    [/^¿A quien /, "A quen "],
-    [/^¿Hay alguna /, "Hai algunha "],
-    [/^¿Hay algun /, "Hai algun "],
-    [/^Si /, "Se "],
-    [/^Y si /, "E se "],
-    [/^Mi /, "A miña "],
-    [/^La /, "A "],
-    [/\bmanana\b/g, "mañá"],
-    [/\bmas\b/g, "máis"],
-    [/\bhoy\b/g, "hoxe"],
-    [/\bcosas\b/g, "cousas"],
-    [/\bcosa\b/g, "cousa"],
-    [/\bcuerpo\b/g, "corpo"],
-    [/\btiempo\b/g, "tempo"],
-    [/\brecuerdo\b/g, "recordo"],
-    [/\brecuerdos\b/g, "recordos"],
-    [/\bsueno\b/g, "soño"],
-    [/\bsuenos\b/g, "soños"],
-    [/\bcolores\b/g, "cores"],
-    [/\bcolor\b/g, "cor"],
-    [/\bobjeto\b/g, "obxecto"],
-    [/\bobjetos\b/g, "obxectos"],
-    [/\bcomida\b/g, "comida"],
-    [/\bbebida\b/g, "bebida"],
-    [/\bconversacion\b/g, "conversa"],
-    [/\bconversaciones\b/g, "conversas"],
-    [/\bgesto\b/g, "xesto"],
-    [/\bgestos\b/g, "xestos"],
-    [/\bcreatividad\b/g, "creatividade"],
-    [/\baprendizaje\b/g, "aprendizaxe"],
-    [/\bamor\b/g, "amor"],
-    [/\besperanza\b/g, "esperanza"],
-    [/\bmiedo\b/g, "medo"],
-    [/\bmiedos\b/g, "medos"],
-    [/\bcancion\b/g, "cancion"],
-    [/\bmusica\b/g, "musica"],
-    [/\bsientes\b/g, "sentes"],
-    [/\bquieres\b/g, "queres"],
-    [/\bpuedes\b/g, "podes"],
-    [/\bharias\b/g, "farias"],
-    [/\bharia\b/g, "faria"],
-    [/\bdirias\b/g, "dirias"],
-    [/\bayuda\b/g, "axuda"],
-    [/\bayudar\b/g, "axudar"],
-    [/\bcuidar\b/g, "coidar"],
-    [/\bcuidado\b/g, "coidado"],
-    [/\bmejor\b/g, "mellor"],
-    [/\blluvia\b/g, "choiva"],
-    [/\bvinculo\b/g, "vinculo"],
-    [/\bhogar\b/g, "fogar"],
-    [/\bmano\b/g, "man"],
-  ];
-
-  for (const [pattern, replacement] of replacements) {
-    text = text.replace(pattern, replacement);
-  }
-
-  return text;
-}
-
 function question(id: string, category: CategoryId, es: string, en: string): Question {
   return {
     id,
     category,
-    text: { es, en, ga: toGalicianPrompt(es) },
+    text: { es, en },
   };
 }
 
