@@ -1,0 +1,14 @@
+Paleta: VISIBILIDAD
+
+Lila Suave · #e9a8fe · rgb(233,168,254)
+Frambuesa · #ae0a7b · rgb(174,10,123)
+Índigo · #7a8dc9 · rgb(122,141,201)
+Rosa Cupcake · #ffcfde · rgb(255,207,222)
+Grafito · #23242e · rgb(35,36,46)
+Cielo de Marzo · #9dc9ed · rgb(157,201,237)
+Lavanda Oscura · #60577e · rgb(96,87,126)
+Sage · #d2d8b9 · rgb(210,216,185)
+Magenta · #f1129b · rgb(241,18,155)
+Orquídea Silvestre · #b6a1ca · rgb(182,161,202)
+Coral Fucsia · #bd359e · rgb(189,53,158)
+Fucsia · #915388 · rgb(145,83,136)

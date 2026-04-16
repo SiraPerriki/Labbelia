@@ -1,0 +1,8 @@
+Paleta: Helado punk
+
+Leche de Avena · #fcdfe1 · rgb(252,223,225)
+Té Verde · #caddc0 · rgb(202,221,192)
+Melocotón · #ffdc99 · rgb(255,220,153)
+Rojo Castellano · #f9678a · rgb(249,103,138)
+Oro Viejo · #fbc547 · rgb(251,197,71)
+Pétalo de Amapola · #feacbc · rgb(254,172,188)

@@ -1,0 +1,7 @@
+Paleta: Vida de cucaracha
+
+Calabaza Pálida · #ffe2a2 · rgb(255,226,162)
+Cian · #75c7c2 · rgb(117,199,194)
+Mantequilla · #ffffcb · rgb(255,255,203)
+Cerezo al Amanecer · #ff7f75 · rgb(255,127,117)
+Dorado · #ffdb67 · rgb(255,219,103)

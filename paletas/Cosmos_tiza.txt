@@ -1,0 +1,8 @@
+Paleta: Cosmos tiza
+
+Salmón Suave · #f1dbc4 · rgb(241,219,196)
+Cian · #9bcdcb · rgb(155,205,203)
+Pétalo de Amapola · #deb0b1 · rgb(222,176,177)
+Gris Francés · #9995b2 · rgb(153,149,178)
+Agua de Mar · #c3e8e4 · rgb(195,232,228)
+Gris Perla · #84716e · rgb(132,113,110)

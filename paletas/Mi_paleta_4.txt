@@ -1,0 +1,8 @@
+Paleta: Mi paleta 4
+
+Leche de Avena · #ffffff · rgb(255,255,255)
+Teal Oscuro · #075650 · rgb(7,86,80)
+Azul Cielo · #acf3ec · rgb(172,243,236)
+Teal · #73e2b7 · rgb(115,226,183)
+Rosa Cuarzo · #ff94af · rgb(255,148,175)
+Violeta · #c08cdd · rgb(192,140,221)

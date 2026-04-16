@@ -1,4 +1,4 @@
-export type Locale = "es" | "en" | "ga";
+export type Locale = "es" | "en" | "ga" | "ja";
 
 export type CategoryId =
   | "self"
@@ -12,7 +12,7 @@ export type CategoryId =
 
 export type LabelSizeId = "classic" | "mini" | "wide" | "square";
 export type CardContentMode = "prompt" | "challenge" | "mood";
-export type LabelTypefaceId = "gochi" | "indie" | "walter";
+export type LabelTypefaceId = "gochi" | "indie" | "walter" | "zen-maru" | "m-plus" | "klee";
 
 export type ThemeId =
   | "postage"
@@ -37,12 +37,14 @@ export type ThemeId =
   | "geometrics"
   | "stars"
   | "confetti"
-  | "undersea";
+  | "undersea"
+  | "matcha-cafe";
 
 export interface LocalizedText {
   es: string;
   en: string;
   ga?: string;
+  ja?: string;
 }
 
 export interface Category {

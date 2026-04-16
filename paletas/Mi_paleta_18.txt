@@ -1,0 +1,8 @@
+Paleta: Mi paleta 18
+
+Rojo Castellano · #d54833 · rgb(213,72,51)
+Zanahorias al Sol · #ed853e · rgb(237,133,62)
+Carbón · #2c2a2e · rgb(44,42,46)
+Miel Oscura · #f5b647 · rgb(245,182,71)
+Grafito · #000000 · rgb(0,0,0)
+Borgoña · #58403d · rgb(88,64,61)

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Gabarito:wght@400;500;600;700;800&family=Gochi+Hand&family=Indie+Flower&family=Walter+Turncoat&family=Quicksand:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Gabarito:wght@400;500;600;700;800&family=Gochi+Hand&family=Indie+Flower&family=Walter+Turncoat&family=Zen+Maru+Gothic:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&family=Klee+One:wght@400;600&family=Quicksand:wght@500;600;700&display=swap");
 
 :root {
   color-scheme: light;
@@ -58,6 +58,10 @@ button {
   overflow: hidden;
   min-height: 100vh;
   padding: 14px;
+}
+
+.app-shell[data-locale="ja"] {
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 
 .app-shell[data-ui-theme="dark"] {
@@ -216,8 +220,16 @@ button {
   background:
     radial-gradient(circle at 14px 11px, rgba(255, 255, 255, 0.34) 0 1px, transparent 1.2px),
     radial-gradient(circle at 14px 21px, rgba(255, 255, 255, 0.28) 0 1px, transparent 1.2px),
-    radial-gradient(circle at calc(100% - 14px) 11px, rgba(255, 255, 255, 0.34) 0 1px, transparent 1.2px),
-    radial-gradient(circle at calc(100% - 14px) 21px, rgba(255, 255, 255, 0.28) 0 1px, transparent 1.2px);
+    radial-gradient(
+      circle at calc(100% - 14px) 11px,
+      rgba(255, 255, 255, 0.34) 0 1px,
+      transparent 1.2px
+    ),
+    radial-gradient(
+      circle at calc(100% - 14px) 21px,
+      rgba(255, 255, 255, 0.28) 0 1px,
+      transparent 1.2px
+    );
 }
 
 .brand-mark > * {
@@ -360,13 +372,23 @@ button {
   width: 1px;
   align-self: stretch;
   min-height: 34px;
-  background: linear-gradient(180deg, rgba(255, 220, 153, 0.04), rgba(202, 221, 192, 0.72), rgba(255, 220, 153, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 220, 153, 0.04),
+    rgba(202, 221, 192, 0.72),
+    rgba(255, 220, 153, 0.04)
+  );
   border-radius: 999px;
   margin: 0 6px;
 }
 
 .app-shell[data-ui-theme="dark"] .topbar-separator {
-  background: linear-gradient(180deg, rgba(117, 199, 194, 0.04), rgba(117, 199, 194, 0.42), rgba(117, 199, 194, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(117, 199, 194, 0.04),
+    rgba(117, 199, 194, 0.42),
+    rgba(117, 199, 194, 0.04)
+  );
 }
 
 .topbar-compact {
@@ -395,9 +417,15 @@ button {
   cursor: pointer;
 }
 
+.topbar-compact-panel .mode-toggle button,
+.topbar-compact-panel .theme-toggle button,
+.topbar-compact-panel .language-toggle button {
+  color: #694f58;
+}
+
 .topbar-compact-trigger.active {
   background: linear-gradient(180deg, rgb(254, 172, 188) 0%, rgb(249, 103, 138) 100%);
-  color: #fffaf5;
+  color: #4a1322;
   border-color: rgba(249, 103, 138, 0.4);
 }
 
@@ -406,8 +434,7 @@ button {
   border-radius: 18px;
   border: 1px solid rgba(202, 221, 192, 0.76);
   background:
-    linear-gradient(180deg, rgba(255, 255, 250, 0.96), rgba(255, 252, 246, 0.96)),
-    var(--page-shell);
+    linear-gradient(180deg, rgba(255, 255, 250, 0.96), rgba(255, 252, 246, 0.96)), var(--page-shell);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -488,9 +515,10 @@ button {
   font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.04em;
-  color: #5c8e86;
+  color: #3e716c;
   background: rgba(255, 255, 252, 0.94);
   box-shadow: inset 0 0 0 1px rgba(117, 199, 194, 0.18);
+  white-space: nowrap;
 }
 
 .theme-toggle button {
@@ -508,7 +536,7 @@ button {
 .mode-toggle button.active,
 .language-toggle button.active {
   background: linear-gradient(180deg, rgb(254, 172, 188) 0%, rgb(249, 103, 138) 100%);
-  color: #fffaf5;
+  color: #4a1322;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
@@ -556,7 +584,7 @@ button {
 
 .app-shell[data-ui-theme="dark"] .language-toggle-compact button {
   background: rgba(30, 46, 52, 0.96);
-  color: #ccefeb;
+  color: #d9f7f2;
   box-shadow:
     inset 0 0 0 1px rgba(117, 199, 194, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -674,8 +702,10 @@ button {
 }
 
 .mini-select select {
-  border: 0;
-  background: transparent;
+  border: 1px solid rgba(107, 136, 125, 0.4);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 2px 4px;
   color: #4f5d58;
   font: inherit;
   font-weight: 800;
@@ -715,6 +745,8 @@ button {
 
 .app-shell[data-ui-theme="dark"] .mini-select select {
   color: #e5f3ef;
+  background: rgba(20, 28, 36, 0.6);
+  border: 1px solid rgba(150, 216, 207, 0.3);
 }
 
 .app-shell[data-ui-theme="dark"] .mini-select select option {
@@ -831,7 +863,10 @@ button {
   color: var(--ink);
   text-align: left;
   cursor: pointer;
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
 }
 
 .size-card strong {
@@ -967,6 +1002,12 @@ button {
   color: #fff0b9;
 }
 
+@keyframes floatGentle {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
 .candidate-preview svg {
   display: block;
   width: min(100%, 640px);
@@ -1003,7 +1044,9 @@ button {
   padding: 9px 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 140ms ease, opacity 140ms ease;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease;
   font-size: 0.9rem;
 }
 
@@ -1140,14 +1183,12 @@ button {
 }
 
 .sheet-panel {
-  background:
-    radial-gradient(circle at top right, rgba(202, 221, 192, 0.06), transparent 22%);
+  background: radial-gradient(circle at top right, rgba(202, 221, 192, 0.06), transparent 22%);
   border-left: 1px solid rgba(202, 221, 192, 0.18);
 }
 
 .app-shell[data-ui-theme="dark"] .sheet-panel {
-  background:
-    radial-gradient(circle at top right, rgba(117, 199, 194, 0.03), transparent 22%);
+  background: radial-gradient(circle at top right, rgba(117, 199, 194, 0.03), transparent 22%);
   border-left-color: rgba(117, 199, 194, 0.1);
 }
 
@@ -1436,7 +1477,10 @@ button {
   text-decoration: none;
   font: inherit;
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .app-shell[data-ui-theme="dark"] .site-footer-links a,
@@ -1546,8 +1590,7 @@ button {
   padding: 14px 16px;
   border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(255, 251, 247, 0.98), rgba(255, 248, 241, 0.96)),
-    var(--page-shell);
+    linear-gradient(180deg, rgba(255, 251, 247, 0.98), rgba(255, 248, 241, 0.96)), var(--page-shell);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.76),
     0 20px 42px rgba(98, 69, 80, 0.16);
@@ -1555,8 +1598,7 @@ button {
 
 .app-shell[data-ui-theme="dark"] .cookie-banner {
   background:
-    linear-gradient(180deg, rgba(26, 34, 45, 0.98), rgba(18, 24, 33, 0.96)),
-    var(--page-shell);
+    linear-gradient(180deg, rgba(26, 34, 45, 0.98), rgba(18, 24, 33, 0.96)), var(--page-shell);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 18px 40px rgba(0, 0, 0, 0.34);

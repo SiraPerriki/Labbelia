@@ -108,7 +108,11 @@ function buildCardId(questionId: string, seed: number, suffix: string): string {
   return `${questionId}-${seed}-${suffix}`;
 }
 
-function drawTheme(sizeId: LabelSizeId, contentMode: CardContentMode, blockedThemeIds: ThemeId[] = []): ThemeId {
+function drawTheme(
+  sizeId: LabelSizeId,
+  contentMode: CardContentMode,
+  blockedThemeIds: ThemeId[] = [],
+): ThemeId {
   const scope = `${contentMode}:${sizeId}:theme`;
   return (
     drawFromDeck({
@@ -118,11 +122,17 @@ function drawTheme(sizeId: LabelSizeId, contentMode: CardContentMode, blockedThe
       blocked: blockedThemeIds,
       recentKey: `${scope}:recent`,
       recentLimit: Math.min(6, Math.max(3, Math.floor(THEMES.length / 4))),
-    }) ?? THEMES[0]?.id ?? "postage"
+    }) ??
+    THEMES[0]?.id ??
+    "postage"
   );
 }
 
-function drawPaletteIndex(sizeId: LabelSizeId, contentMode: CardContentMode, blockedPaletteIndices: number[] = []): number {
+function drawPaletteIndex(
+  sizeId: LabelSizeId,
+  contentMode: CardContentMode,
+  blockedPaletteIndices: number[] = [],
+): number {
   const scope = `${contentMode}:${sizeId}:palette`;
   const indices = PALETTES.map((_, index) => index);
 
@@ -138,7 +148,10 @@ function drawPaletteIndex(sizeId: LabelSizeId, contentMode: CardContentMode, blo
   );
 }
 
-function drawMoodTemplateId(sizeId: LabelSizeId, blockedTemplateIds: string[] = []): string | undefined {
+function drawMoodTemplateId(
+  sizeId: LabelSizeId,
+  blockedTemplateIds: string[] = [],
+): string | undefined {
   const scope = `mood:${sizeId}:template`;
 
   return (
@@ -153,10 +166,14 @@ function drawMoodTemplateId(sizeId: LabelSizeId, blockedTemplateIds: string[] = 
   );
 }
 
-function drawQuestionFromDeck(options: Omit<BatchOptions, "count"> & { deckKeyPrefix: string }): Question | null {
+function drawQuestionFromDeck(
+  options: Omit<BatchOptions, "count"> & { deckKeyPrefix: string },
+): Question | null {
   const { questions, categoryId, excludeQuestionIds = [], deckKeyPrefix } = options;
 
-  const filtered = questions.filter((question) => categoryId === ALL_CATEGORIES || question.category === categoryId);
+  const filtered = questions.filter(
+    (question) => categoryId === ALL_CATEGORIES || question.category === categoryId,
+  );
 
   if (filtered.length === 0) {
     return null;
@@ -172,7 +189,7 @@ function drawQuestionFromDeck(options: Omit<BatchOptions, "count"> & { deckKeyPr
     recentLimit: Math.min(14, Math.max(5, Math.floor(filtered.length / 8))),
   });
 
-  return questionId ? byId.get(questionId) ?? null : null;
+  return questionId ? (byId.get(questionId) ?? null) : null;
 }
 
 function createDecoratedCard(

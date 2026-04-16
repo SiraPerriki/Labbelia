@@ -21,36 +21,19 @@ export function CandidateCard(props: CandidateCardProps) {
     <article className="candidate-card">
       <div className={`candidate-preview candidate-preview-${size.id}`}>
         <div className="candidate-preview-toolbar">
-          <button
-            className="preview-chip"
-            onClick={props.onRefreshLook}
-            type="button"
-          >
+          <button className="preview-chip" onClick={props.onRefreshLook} type="button">
             {props.refreshLookLabel}
           </button>
           {props.onRefreshQuestion && props.refreshQuestionLabel ? (
-            <button
-              className="preview-chip"
-              onClick={props.onRefreshQuestion}
-              type="button"
-            >
+            <button className="preview-chip" onClick={props.onRefreshQuestion} type="button">
               {props.refreshQuestionLabel}
             </button>
           ) : null}
         </div>
-        <LabelSvg
-          card={card}
-          locale={locale}
-          size={size}
-          typeface={props.typeface}
-        />
+        <LabelSvg card={card} locale={locale} size={size} typeface={props.typeface} />
       </div>
       <div className="candidate-actions">
-        <button
-          className="text-button"
-          onClick={() => props.onDownload(card)}
-          type="button"
-        >
+        <button className="text-button" onClick={() => props.onDownload(card)} type="button">
           {props.downloadLabel}
         </button>
       </div>

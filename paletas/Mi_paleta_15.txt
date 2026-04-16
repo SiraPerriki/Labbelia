@@ -1,0 +1,8 @@
+Paleta: Mi paleta 15
+
+Azul Medianoche · #102446 · rgb(16,36,70)
+Rosa Intenso · #b15587 · rgb(177,85,135)
+Noche Azul · #3b356f · rgb(59,53,111)
+Magenta · #814589 · rgb(129,69,137)
+Salmón Suave · #f8c6b5 · rgb(248,198,181)
+Teal · #58b2bf · rgb(88,178,191)

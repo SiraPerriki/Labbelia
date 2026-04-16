@@ -1,0 +1,14 @@
+Paleta: Aurorita pastel
+
+Fucsia · #da4280 · rgb(218,66,128)
+Magenta · #b06d94 · rgb(176,109,148)
+Berenjena · #6c4086 · rgb(108,64,134)
+Amatista Noche · #2a1845 · rgb(42,24,69)
+Orquídea Silvestre · #826fab · rgb(130,111,171)
+Índigo Violeta · #403272 · rgb(64,50,114)
+Índigo · #456c97 · rgb(69,108,151)
+Verde Azulado · #45aaa9 · rgb(69,170,169)
+Cian · #7fafaa · rgb(127,175,170)
+Dorado · #f5c755 · rgb(245,199,85)
+Mandarina · #d9b282 · rgb(217,178,130)
+Carmín · #ec816d · rgb(236,129,109)

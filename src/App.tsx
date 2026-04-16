@@ -1,15 +1,22 @@
 import { startTransition, useEffect, useRef, useState } from "react";
-import { CandidateCard } from "./components/CandidateCard";
-import { SheetSvg } from "./components/SheetSvg";
+import { Topbar } from "./components/Topbar";
+import { Footer } from "./components/Footer";
+import { CandidateStage } from "./components/CandidateStage";
+import { SheetPanel } from "./components/SheetPanel";
+import { CookieBanner } from "./components/CookieBanner";
+
 import { CREATIVE_CHALLENGE_BANK } from "./data/challenges";
-import { UI_COPY } from "./data/content";
 import { LABEL_SIZES } from "./data/design";
-import { getMoodTrackerTitle, MOOD_TRACKER_TEMPLATES, MOOD_TRACKER_TITLE } from "./data/mood";
+import { MOOD_TRACKER_TEMPLATES } from "./data/mood";
 import { QUESTION_BANK } from "./data/questions";
-import { setAnalyticsConsent } from "./lib/analytics";
-import { downloadCardSvg, downloadSheetPng, downloadSheetSvg } from "./lib/export";
-import { ALL_CATEGORIES, createChallengeCard, createMoodBatch, createPromptCard, rerollCardLook } from "./lib/generator";
-import { localize } from "./lib/i18n";
+import { downloadSheetPng } from "./lib/export";
+import {
+  ALL_CATEGORIES,
+  createChallengeCard,
+  createMoodBatch,
+  createPromptCard,
+  rerollCardLook,
+} from "./lib/generator";
 import { CardContentMode, LabelCard, LabelSizeId, LabelTypefaceId, Locale } from "./types";
 
 const BATCH_SIZE = 1;
@@ -17,29 +24,9 @@ const UI_THEME_STORAGE_KEY = "labbelia-ui-theme-v2";
 const COOKIE_CONSENT_STORAGE_KEY = "labbelia-cookie-consent-v1";
 const LABEL_TYPEFACE_STORAGE_KEY = "labbelia-label-typeface-v1";
 
-const LABEL_TYPEFACE_OPTIONS: Array<{
-  id: LabelTypefaceId;
-  label: { es: string; en: string };
-}> = [
-  { id: "gochi", label: { es: "Gochi", en: "Gochi" } },
-  { id: "indie", label: { es: "Indie", en: "Indie" } },
-  { id: "walter", label: { es: "Walter", en: "Walter" } },
-];
 
-type CookieConsent = "unknown" | "accepted" | "rejected";
 
-function text(locale: Locale, value: { es: string; en: string }): string {
-  return localize(locale, value);
-}
 
-function getStoredCookieConsent(): CookieConsent {
-  if (typeof window === "undefined") {
-    return "unknown";
-  }
-
-  const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
-  return stored === "accepted" || stored === "rejected" ? stored : "unknown";
-}
 
 function App() {
   type SheetBucket = "strip" | "mood";
@@ -88,12 +75,13 @@ function App() {
     mood: null,
   });
   const [sheetFullToast, setSheetFullToast] = useState<string | null>(null);
-  const [cookieConsent, setCookieConsent] = useState<CookieConsent>(() => getStoredCookieConsent());
-  const [cookieBannerOpen, setCookieBannerOpen] = useState(() => getStoredCookieConsent() === "unknown");
-  const [cookiePreferencesOpen, setCookiePreferencesOpen] = useState(false);
-  const [analyticsCookiesEnabled, setAnalyticsCookiesEnabled] = useState(
-    () => getStoredCookieConsent() === "accepted",
-  );
+  const [cookieBannerOpen, setCookieBannerOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+    const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
+    return stored === "unknown";
+  });
   const seenQuestionIdsRef = useRef<Record<"prompt" | "challenge", string[]>>({
     prompt: [],
     challenge: [],
@@ -124,14 +112,7 @@ function App() {
     window.localStorage.setItem(LABEL_TYPEFACE_STORAGE_KEY, labelTypeface);
   }, [labelTypeface]);
 
-  useEffect(() => {
-    if (cookieConsent === "unknown") {
-      return;
-    }
 
-    window.localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, cookieConsent);
-    setAnalyticsConsent(cookieConsent === "accepted");
-  }, [cookieConsent]);
 
   useEffect(() => {
     function syncTopbarMode() {
@@ -201,12 +182,18 @@ function App() {
     }
   }
 
-  function nextTextCard(mode: "prompt" | "challenge", extraExcludedIds: string[] = []): LabelCard | null {
-    const source = mode === "challenge" ? CREATIVE_CHALLENGE_BANK : QUESTION_BANK;
+  function nextTextCard(
+    mode: "prompt" | "challenge",
+    extraExcludedIds: string[] = [],
+  ): LabelCard | null {
+    const fullSource = mode === "challenge" ? CREATIVE_CHALLENGE_BANK : QUESTION_BANK;
+    const source = locale === "ja" ? fullSource.filter((q) => q.text.ja) : fullSource;
     const create = mode === "challenge" ? createChallengeCard : createPromptCard;
     const sheetIds = idsOnSheet(mode);
-    const strictExcluded = [...new Set([...sheetIds, ...seenQuestionIdsRef.current[mode], ...extraExcludedIds])];
-    let next =
+    const strictExcluded = [
+      ...new Set([...sheetIds, ...seenQuestionIdsRef.current[mode], ...extraExcludedIds]),
+    ];
+    const next =
       create({
         questions: source,
         categoryId: ALL_CATEGORIES,
@@ -251,7 +238,15 @@ function App() {
 
   useEffect(() => {
     refillCandidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentMode, sizeId]);
+
+  useEffect(() => {
+    if (locale === "ja") {
+      refillCandidate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   function regenerateBatch(): void {
     const current = candidates[0];
@@ -367,9 +362,7 @@ function App() {
     if (
       (card.contentMode === "prompt" || card.contentMode === "challenge") &&
       sheetCards.some(
-        (item) =>
-          item.contentMode === card.contentMode &&
-          item.question.id === card.question.id,
+        (item) => item.contentMode === card.contentMode && item.question.id === card.question.id,
       )
     ) {
       return;
@@ -420,555 +413,75 @@ function App() {
     window.print();
   }
 
-  function cardLabel(card: LabelCard): string {
-    return card.contentMode === "mood"
-      ? localize(locale, getMoodTrackerTitle(card.moodTemplateId))
-      : localize(locale, card.question.text);
-  }
 
-  function acceptAnalyticsCookies(): void {
-    setAnalyticsCookiesEnabled(true);
-    setCookieConsent("accepted");
-    setCookiePreferencesOpen(false);
-    setCookieBannerOpen(false);
-  }
 
-  function rejectOptionalCookies(): void {
-    setAnalyticsCookiesEnabled(false);
-    setCookieConsent("rejected");
-    setCookiePreferencesOpen(false);
-    setCookieBannerOpen(false);
-  }
-
-  function saveCookiePreferences(): void {
-    setCookieConsent(analyticsCookiesEnabled ? "accepted" : "rejected");
-    setCookiePreferencesOpen(false);
-    setCookieBannerOpen(false);
-  }
-
-  function openCookiePreferences(): void {
-    setCookieBannerOpen(true);
-    setCookiePreferencesOpen(false);
-  }
-
-  function closeCookieBanner(): void {
-    setCookiePreferencesOpen(false);
-    setCookieBannerOpen(false);
-  }
 
   const currentCard = candidates[0];
-  const showTypefacePicker = contentMode !== "mood";
-  const brandBlock = (
-    <div className="topbar-copy">
-      <div className="brand-mark" aria-hidden="true">
-        <span className="brand-mark-glyph brand-mark-glyph-heart">♥</span>
-        <span className="brand-mark-glyph brand-mark-glyph-letter">L</span>
-      </div>
-      <div className="brand-lockup">
-        <div className="brand-title-row">
-          <p className="eyebrow">{text(locale, UI_COPY.appTitle)}</p>
-        </div>
-        <p className="brand-tagline">{text(locale, UI_COPY.appSubtitle)}</p>
-      </div>
-    </div>
-  );
-  const controlsBlock = (
-    <div className="topbar-actions">
-      <div className="mode-toggle" role="tablist" aria-label={locale === "en" ? "Label mode" : "Modo de etiqueta"}>
-        <button
-          className={contentMode === "prompt" ? "active" : ""}
-          onClick={() => setContentMode("prompt")}
-          type="button"
-        >
-          {locale === "en" ? "♡ Strips" : "♡ Tiritas"}
-        </button>
-        <button
-          className={contentMode === "challenge" ? "active" : ""}
-          onClick={() => setContentMode("challenge")}
-          type="button"
-        >
-          {locale === "en" ? "✦ Creative challenges" : "✦ Retos creativos"}
-        </button>
-        <button
-          className={contentMode === "mood" ? "active" : ""}
-          onClick={() => setContentMode("mood")}
-          type="button"
-        >
-          {`☆ ${localize(locale, MOOD_TRACKER_TITLE)}`}
-        </button>
-      </div>
-      <span className="topbar-separator" aria-hidden="true" />
-      <div
-        className="theme-toggle"
-        role="tablist"
-        aria-label={locale === "en" ? "Interface theme" : "Tema de interfaz"}
-      >
-        <button
-          className={uiTheme === "light" ? "active" : ""}
-          onClick={() => setUiTheme("light")}
-          type="button"
-        >
-          {locale === "en" ? "☀ Light" : "☀ Claro"}
-        </button>
-        <button
-          className={uiTheme === "dark" ? "active" : ""}
-          onClick={() => setUiTheme("dark")}
-          type="button"
-        >
-          {locale === "en" ? "☾ Dark" : "☾ Oscuro"}
-        </button>
-      </div>
-      <span className="topbar-separator" aria-hidden="true" />
-      <div className="language-toggle language-toggle-compact" role="tablist" aria-label={locale === "en" ? "Language switcher" : "Selector de idioma"}>
-        <button
-          className={locale === "es" ? "active" : ""}
-          onClick={() => setLocale("es")}
-          type="button"
-        >
-          ES
-        </button>
-        <button
-          className={locale === "en" ? "active" : ""}
-          onClick={() => setLocale("en")}
-          type="button"
-        >
-          EN
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="app-shell" data-ui-theme={uiTheme}>
       <div className="ambient ambient-left" />
       <div className="ambient ambient-right" />
-      <header className={`topbar card-surface ${compactTopbar ? "topbar-compact" : ""}`}>
-        {compactTopbar ? (
-          <>
-            <div className="topbar-compact-row">
-              <button
-                className={`topbar-compact-trigger ${brandMenuOpen ? "active" : ""}`}
-                onClick={() => setBrandMenuOpen((open) => !open)}
-                type="button"
-              >
-                Labbelia
-              </button>
-              <button
-                className={`topbar-compact-trigger ${optionsMenuOpen ? "active" : ""}`}
-                onClick={() => setOptionsMenuOpen((open) => !open)}
-                type="button"
-              >
-                {locale === "en" ? "Options" : "Opciones"}
-              </button>
-            </div>
-            {brandMenuOpen ? (
-              <div className="topbar-compact-panel">
-                {brandBlock}
-              </div>
-            ) : null}
-            {optionsMenuOpen ? (
-              <div className="topbar-compact-panel">
-                {controlsBlock}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {brandBlock}
-            {controlsBlock}
-          </>
-        )}
-      </header>
+      <Topbar
+        locale={locale}
+        setLocale={setLocale}
+        uiTheme={uiTheme}
+        setUiTheme={setUiTheme}
+        contentMode={contentMode}
+        setContentMode={setContentMode}
+        compactTopbar={compactTopbar}
+        brandMenuOpen={brandMenuOpen}
+        setBrandMenuOpen={setBrandMenuOpen}
+        optionsMenuOpen={optionsMenuOpen}
+        setOptionsMenuOpen={setOptionsMenuOpen}
+      />
 
       <main className="main-grid">
         <section className="focus-panel card-surface">
           <div className="atelier-layout">
-            <div className="candidate-grid">
-              {currentCard ? (
-                <div className="focus-stage">
-                  <div className="focus-caption">
-                    <div className="focus-heading">
-                      <span className="focus-kicker">
-                        {contentMode === "mood"
-                          ? locale === "en"
-                            ? "Tracker"
-                            : "Tracker"
-                          : contentMode === "challenge"
-                            ? locale === "en"
-                              ? "Creative strip"
-                              : "Tirita creativa"
-                          : locale === "en"
-                            ? "Strip"
-                            : "Tirita"}
-                      </span>
-                    </div>
-                    <div className="focus-status-strip">
-                      {showTypefacePicker ? (
-                        <label className="mini-select" htmlFor="label-typeface-select">
-                          <span>{locale === "en" ? "Font" : "Tipografía"}</span>
-                          <select
-                            id="label-typeface-select"
-                            value={labelTypeface}
-                            onChange={(event) => setLabelTypeface(event.target.value as LabelTypefaceId)}
-                          >
-                            {LABEL_TYPEFACE_OPTIONS.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {text(locale, option.label)}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      ) : null}
-                      <span className="mini-stat mini-stat-soft">
-                        {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="focus-actions">
-                    <button
-                      className="button button-ghost"
-                      disabled={!undoCardByMode[contentMode]}
-                      onClick={undoLastChange}
-                      type="button"
-                    >
-                      {locale === "en" ? "↶ Undo" : "↶ Deshacer"}
-                    </button>
-                    <button
-                      className="button button-secondary"
-                      onClick={regenerateBatch}
-                      type="button"
-                    >
-                      {contentMode === "mood"
-                        ? locale === "en"
-                          ? "↻ Another tracker"
-                          : "↻ Otro tracker"
-                        : contentMode === "challenge"
-                          ? locale === "en"
-                            ? "↻ Another challenge"
-                            : "↻ Otro reto"
-                          : locale === "en"
-                            ? "↻ Next"
-                            : "↻ Siguiente"}
-                    </button>
-                    <button
-                      className="button button-primary"
-                      disabled={
-                        sheetCards.length >= capacity ||
-                        ((currentCard.contentMode === "prompt" || currentCard.contentMode === "challenge") &&
-                          sheetCards.some((selected) => selected.contentMode === currentCard.contentMode && selected.question.id === currentCard.question.id))
-                      }
-                      onClick={() => addToSheet(currentCard)}
-                      type="button"
-                    >
-                      {(currentCard.contentMode === "prompt" || currentCard.contentMode === "challenge") &&
-                      sheetCards.some((selected) => selected.contentMode === currentCard.contentMode && selected.question.id === currentCard.question.id)
-                        ? locale === "en"
-                          ? "On sheet"
-                          : "En hoja"
-                        : locale === "en"
-                          ? contentMode === "challenge"
-                            ? "＋ Keep challenge"
-                            : "＋ Keep on sheet"
-                          : contentMode === "challenge"
-                            ? "＋ Guardar reto"
-                            : "＋ Guardar en hoja"}
-                    </button>
-                  </div>
-                  {sheetFullToast ? (
-                    <div className="mini-toast" aria-live="polite" role="status">
-                      <span className="mini-toast-heart" aria-hidden="true">
-                        ♡
-                      </span>
-                      <span>{sheetFullToast}</span>
-                      <span className="mini-toast-heart" aria-hidden="true">
-                        ♡
-                      </span>
-                    </div>
-                  ) : null}
-                  <CandidateCard
-                    key={currentCard.id}
-                    card={currentCard}
-                    size={size}
-                    locale={locale}
-                    typeface={labelTypeface}
-                    onDownload={(item) => downloadCardSvg(item, size, locale, labelTypeface)}
-                    onRefreshLook={rerollCurrentLook}
-                    onRefreshQuestion={currentCard.contentMode === "mood" ? rerollCurrentMoodTemplate : rerollCurrentQuestion}
-                    downloadLabel={locale === "en" ? "↓ Single SVG" : "↓ SVG individual"}
-                    refreshLookLabel={locale === "en" ? "◌ Background" : "◌ Fondo"}
-                    refreshQuestionLabel={
-                      currentCard.contentMode === "mood"
-                        ? locale === "en"
-                          ? "☆ Tracker"
-                          : "☆ Tracker"
-                        : currentCard.contentMode === "prompt"
-                        ? locale === "en"
-                          ? "✎ Phrase"
-                          : "✎ Frase"
-                        : currentCard.contentMode === "challenge"
-                          ? locale === "en"
-                            ? "✎ Challenge"
-                            : "✎ Reto"
-                          : undefined
-                    }
-                  />
-                </div>
-              ) : (
-                <p className="empty-sheet">
-                  {contentMode === "challenge"
-                    ? locale === "en"
-                      ? "No creative challenges left right now."
-                      : "No quedan retos creativos ahora mismo."
-                    : locale === "en"
-                      ? "No prompts left in this filter."
-                      : "No quedan más preguntas en este filtro."}
-                </p>
-              )}
-            </div>
+            <CandidateStage
+              currentCard={currentCard}
+              contentMode={contentMode}
+              locale={locale}
+              size={size}
+              sheetCards={sheetCards}
+              capacity={capacity}
+              labelTypeface={labelTypeface}
+              setLabelTypeface={setLabelTypeface}
+              undoCardByMode={undoCardByMode}
+              undoLastChange={undoLastChange}
+              regenerateBatch={regenerateBatch}
+              addToSheet={addToSheet}
+              sheetFullToast={sheetFullToast}
+              rerollCurrentLook={rerollCurrentLook}
+              rerollCurrentMoodTemplate={rerollCurrentMoodTemplate}
+              rerollCurrentQuestion={rerollCurrentQuestion}
+            />
           </div>
         </section>
 
-        <section className="sheet-panel card-surface" data-nosnippet>
-          <div className="section-header section-header-inline">
-            <div>
-              <h2>
-                {contentMode === "mood"
-                  ? locale === "en"
-                    ? "A4 of compact mood trackers"
-                    : "A4 de mood tracker compacto"
-                  : contentMode === "challenge"
-                    ? locale === "en"
-                      ? "A4 of mini creative challenge strips"
-                      : "A4 de tiritas mini de retos creativos"
-                  : locale === "en"
-                    ? "A4 of mini journaling strips"
-                    : "A4 de tiritas mini para journaling"}
-              </h2>
-              <p>
-                {contentMode === "mood"
-                  ? locale === "en"
-                    ? "Build a compact mood sheet ready to print."
-                    : "Compón una hoja de seguimiento."
-                  : contentMode === "challenge"
-                    ? locale === "en"
-                      ? "Fill the page with creative challenges."
-                      : "Llena la página con retos creativos."
-                    : text(locale, UI_COPY.sheetSubtitle)}
-              </p>
-            </div>
-            <div className="toolbar">
-              <button
-                className="button button-secondary"
-                onClick={() =>
-                  setSheetCardsByMode((current) => ({
-                    ...current,
-                    [sheetBucket]: [],
-                  }))
-                }
-                type="button"
-              >
-                {locale === "en" ? "⌫ Clear sheet" : "⌫ Vaciar hoja"}
-              </button>
-            </div>
-          </div>
-
-          <div className="sheet-meta sheet-meta-inline">
-            <span>
-              {text(locale, UI_COPY.selected)} {sheetCards.length}/{capacity} - {localize(locale, size.description)}
-            </span>
-          </div>
-
-          <div className="print-area">
-            <div className={`sheet-frame sheet-frame-${size.id}`}>
-              <SheetSvg
-                cards={sheetCards}
-                locale={locale}
-                size={size}
-                typeface={labelTypeface}
-                showPlaceholders
-              />
-            </div>
-          </div>
-
-          <div className="export-row">
-            <button
-              className="button button-primary"
-              disabled={sheetCards.length === 0}
-              onClick={() => downloadSheetSvg(sheetCards, size, locale, labelTypeface)}
-              type="button"
-            >
-              {locale === "en" ? "↓ Download A4 SVG" : "↓ Descargar A4 SVG"}
-            </button>
-            <button
-              className="button button-primary"
-              disabled={sheetCards.length === 0 || exportingPng}
-              onClick={handleSheetPng}
-              type="button"
-            >
-              {exportingPng
-                ? locale === "en"
-                  ? "… Rendering"
-                  : "… Renderizando"
-                : locale === "en"
-                  ? "↓ Download A4 PNG"
-                  : "↓ Descargar A4 PNG"}
-            </button>
-            <button
-              className="button button-secondary"
-              disabled={sheetCards.length === 0}
-              onClick={printSheet}
-              type="button"
-            >
-              {locale === "en" ? "⎙ Print / PDF" : "⎙ Imprimir / PDF"}
-            </button>
-          </div>
-
-          <p className="print-hint">{text(locale, UI_COPY.printHint)}</p>
-
-          {sheetCards.length === 0 ? (
-            <p className="empty-sheet">{text(locale, UI_COPY.emptySheet)}</p>
-          ) : (
-            <div className="selected-list">
-              {sheetCards.map((card, index) => (
-                <div key={card.id} className="selected-item">
-                  <span className="selected-index">{index + 1}</span>
-                  <span className="selected-question">{cardLabel(card)}</span>
-                  <button
-                    className="text-button"
-                    onClick={() => removeFromSheet(card.id)}
-                    type="button"
-                  >
-                    {text(locale, UI_COPY.remove)}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        <SheetPanel
+          contentMode={contentMode}
+          locale={locale}
+          sheetCards={sheetCards}
+          size={size}
+          capacity={capacity}
+          labelTypeface={labelTypeface}
+          exportingPng={exportingPng}
+          clearSheet={() =>
+            setSheetCardsByMode((current) => ({
+              ...current,
+              [sheetBucket]: [],
+            }))
+          }
+          removeFromSheet={removeFromSheet}
+          handleSheetPng={handleSheetPng}
+          printSheet={printSheet}
+        />
       </main>
 
-      <footer className="site-footer card-surface" data-nosnippet>
-        <div className="site-footer-copy">
-          <p className="site-footer-title">Labbelia</p>
-          <p className="site-footer-note">
-            Pequeñas tiritas desarrolladas con cariño por <strong>Sira Perriki</strong>.
-          </p>
-        </div>
-        <nav className="site-footer-links" aria-label="Enlaces de Labbelia">
-          <a href="https://x.com/SiraPerriki" target="_blank" rel="noreferrer">
-            <span className="site-footer-link-symbol site-footer-link-symbol-x">✦</span>
-            <span>X · @SiraPerriki</span>
-          </a>
-          <a href="https://github.com/SiraPerriki" target="_blank" rel="noreferrer">
-            <span className="site-footer-link-symbol site-footer-link-symbol-github">⌘</span>
-            <span>GitHub · @SiraPerriki</span>
-          </a>
-          <a href="mailto:Sira.Perriki@proton.me">
-            <span className="site-footer-link-symbol site-footer-link-symbol-mail">✉</span>
-            <span>Correo · Sira.Perriki@proton.me</span>
-          </a>
-          <a href="https://ko-fi.com/siraperriki" target="_blank" rel="noreferrer">
-            <span className="site-footer-link-symbol site-footer-link-symbol-kofi">☕</span>
-            <span>{locale === "en" ? "Ko-fi · Buy me a coffee" : "Ko-fi · Invítame a un café"}</span>
-          </a>
-          <button
-            className="site-footer-link-button"
-            onClick={openCookiePreferences}
-            type="button"
-          >
-            <span className="site-footer-link-symbol site-footer-link-symbol-settings">⚙</span>
-            <span>{locale === "en" ? "Cookies" : "Cookies"}</span>
-          </button>
-        </nav>
-      </footer>
-
-      {cookieConsent === "unknown" || cookieBannerOpen ? (
-        <aside className="cookie-banner card-surface" aria-live="polite">
-          <div className="cookie-banner-copy">
-            <div className="cookie-banner-header">
-              <p className="cookie-banner-title">
-                {locale === "en" ? "Cookies and analytics" : "Cookies y analítica"}
-              </p>
-              {cookieConsent !== "unknown" ? (
-                <button className="cookie-banner-close" onClick={closeCookieBanner} type="button">
-                  {locale === "en" ? "Close" : "Cerrar"}
-                </button>
-              ) : null}
-            </div>
-            <p className="cookie-banner-text">
-              {locale === "en"
-                ? "Labbelia uses only essential storage and optional analytics. If you accept analytics, Google Analytics will collect aggregated data about visits, viewed pages, device, language and basic navigation actions."
-                : "Labbelia usa solo almacenamiento esencial y analítica opcional. Si aceptas la analítica, Google Analytics recogerá datos agregados sobre visitas, páginas vistas, dispositivo, idioma y acciones básicas de navegación."}
-            </p>
-            <p className="cookie-banner-status">
-              {cookieConsent === "unknown"
-                ? locale === "en"
-                  ? "Analytics stays blocked until you choose."
-                  : "La analítica permanece bloqueada hasta que elijas."
-                : analyticsCookiesEnabled
-                  ? locale === "en"
-                    ? "Current setting: analytics accepted."
-                    : "Estado actual: analítica aceptada."
-                  : locale === "en"
-                    ? "Current setting: only essential storage."
-                    : "Estado actual: solo almacenamiento esencial."}
-            </p>
-          </div>
-
-          <div className="cookie-banner-actions">
-            <button className="button button-secondary cookie-choice-reject" onClick={rejectOptionalCookies} type="button">
-              {locale === "en" ? "Reject analytics" : "Rechazar analítica"}
-            </button>
-            <button
-              className="button button-ghost cookie-choice-configure"
-              onClick={() => setCookiePreferencesOpen((open) => !open)}
-              type="button"
-            >
-              {cookiePreferencesOpen
-                ? locale === "en"
-                  ? "Hide options"
-                  : "Ocultar opciones"
-                : locale === "en"
-                  ? "Customize"
-                  : "Personalizar"}
-            </button>
-            <button className="button button-secondary cookie-choice-accept" onClick={acceptAnalyticsCookies} type="button">
-              {locale === "en" ? "Accept analytics" : "Aceptar analítica"}
-            </button>
-          </div>
-
-          {cookiePreferencesOpen ? (
-            <div className="cookie-preferences">
-              <label className="cookie-toggle">
-                <div>
-                  <span className="cookie-toggle-title">
-                    {locale === "en" ? "Analytics cookies" : "Cookies analíticas"}
-                  </span>
-                  <span className="cookie-toggle-note">
-                    {locale === "en"
-                      ? "They help us understand which views and actions are useful."
-                      : "Nos ayudan a entender qué vistas y acciones resultan útiles."}
-                  </span>
-                </div>
-                <input
-                  checked={analyticsCookiesEnabled}
-                  onChange={(event) => setAnalyticsCookiesEnabled(event.target.checked)}
-                  type="checkbox"
-                />
-              </label>
-
-              <div className="cookie-preferences-actions">
-                <button className="button button-ghost" onClick={closeCookieBanner} type="button">
-                  {locale === "en" ? "Close" : "Cerrar"}
-                </button>
-                <button className="button button-primary" onClick={saveCookiePreferences} type="button">
-                  {locale === "en" ? "Save selection" : "Guardar selección"}
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </aside>
-      ) : null}
+      <Footer locale={locale} openCookiePreferences={() => { setCookieBannerOpen(true); }} />
+      <CookieBanner locale={locale} forceOpen={cookieBannerOpen} onClose={() => setCookieBannerOpen(false)} />
     </div>
   );
 }

@@ -28,7 +28,7 @@ function slugify(value: string): string {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 50);
 }
@@ -45,14 +45,14 @@ function exportName(card: LabelCard, locale: Locale): string {
   return slugify(localize(locale, card.question.text)) || "label";
 }
 
-export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale, typeface: LabelTypefaceId): void {
+export function downloadCardSvg(
+  card: LabelCard,
+  size: LabelSize,
+  locale: Locale,
+  typeface: LabelTypefaceId,
+): void {
   const markup = renderToStaticMarkup(
-    <LabelSvg
-      card={card}
-      locale={locale}
-      size={size}
-      typeface={typeface}
-    />,
+    <LabelSvg card={card} locale={locale} size={size} typeface={typeface} />,
   );
 
   downloadBlob(
@@ -61,7 +61,12 @@ export function downloadCardSvg(card: LabelCard, size: LabelSize, locale: Locale
   );
 }
 
-export function downloadSheetSvg(cards: LabelCard[], size: LabelSize, locale: Locale, typeface: LabelTypefaceId): void {
+export function downloadSheetSvg(
+  cards: LabelCard[],
+  size: LabelSize,
+  locale: Locale,
+  typeface: LabelTypefaceId,
+): void {
   const markup = renderToStaticMarkup(
     <SheetSvg
       cards={cards}

@@ -32,9 +32,11 @@ export function SheetSvg(props: SheetSvgProps) {
   const ariaLabel =
     locale === "en"
       ? "Printable A4 label sheet"
-      : locale === "ga"
-        ? "Folla A4 imprimible de etiquetas"
-        : "Hoja A4 imprimible de etiquetas";
+      : locale === "ja"
+        ? "印刷用のA4シート"
+        : locale === "ga"
+          ? "Folla A4 imprimible de etiquetas"
+          : "Hoja A4 imprimible de etiquetas";
 
   return (
     <svg
@@ -92,10 +94,7 @@ export function SheetSvg(props: SheetSvgProps) {
         }
 
         return (
-          <g
-            key={`placeholder-${index}`}
-            transform={`translate(${position.x} ${position.y})`}
-          >
+          <g key={`placeholder-${index}`} transform={`translate(${position.x} ${position.y})`}>
             <rect
               width={size.widthMm}
               height={size.heightMm}
